@@ -1,0 +1,672 @@
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d47a1 100%);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Panel de Control */
+.control-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #4ecdc4;
+}
+
+.input-group input {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.input-group button {
+    padding: 12px 20px;
+    background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.input-group button:hover {
+    transform: translateY(-2px);
+}
+
+.meteor-params h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.param-group {
+    margin-bottom: 15px;
+}
+
+.param-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #4ecdc4;
+}
+
+.param-group input[type="range"] {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.param-group select {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.param-group span {
+    font-weight: 600;
+    color: #ff6b6b;
+}
+
+.simulation-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-primary, .btn-secondary, .btn-warning {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, #6c757d, #5a6268);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    color: #212529;
+}
+
+.btn-primary:hover, .btn-secondary:hover, .btn-warning:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Contenido Principal */
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.visualization-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.earth-view {
+    width: 100%;
+    height: 500px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background: #000;
+    position: relative;
+}
+
+#earth-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+.impact-data {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.impact-data h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.data-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #4ecdc4;
+}
+
+.data-item .label {
+    font-weight: 600;
+    color: #4ecdc4;
+}
+
+.data-item .value {
+    font-weight: 700;
+    color: #ff6b6b;
+}
+
+/* Panel de Efectos */
+.effects-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.effects-panel h3 {
+    color: #ff6b6b;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.effects-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.effect-item {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-left: 4px solid #ff6b6b;
+    transition: transform 0.2s;
+}
+
+.effect-item:hover {
+    transform: translateY(-2px);
+}
+
+.effect-icon {
+    font-size: 2rem;
+}
+
+.effect-info h4 {
+    color: #4ecdc4;
+    margin-bottom: 5px;
+}
+
+.effect-info p {
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+/* Panel de Mitigación */
+.mitigation-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mitigation-panel h3 {
+    color: #ffc107;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.mitigation-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.mitigation-card {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #ffc107;
+    transition: transform 0.2s;
+}
+
+.mitigation-card:hover {
+    transform: translateY(-3px);
+}
+
+.mitigation-card h4 {
+    color: #ffc107;
+    margin-bottom: 10px;
+}
+
+.mitigation-card p {
+    color: #ffffff;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.btn-mitigation {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    border: none;
+    border-radius: 8px;
+    color: #212529;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-mitigation:hover {
+    transform: translateY(-2px);
+}
+
+/* Panel de Alertas */
+.alerts-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alerts-panel h3 {
+    color: #ff6b6b;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.neo-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.neo-item {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #ff6b6b;
+}
+
+.neo-item h4 {
+    color: #4ecdc4;
+    margin-bottom: 5px;
+}
+
+.neo-item p {
+    color: #ffffff;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .effects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mitigation-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .earth-view {
+        height: 300px;
+    }
+    
+    .control-panel {
+        padding: 15px;
+    }
+}
+
+/* Animaciones */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible para accesibilidad */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #4ecdc4;
+    outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    body {
+        background: #000000;
+        color: #ffffff;
+    }
+    
+    .control-panel,
+    .visualization-container,
+    .effects-panel,
+    .mitigation-panel,
+    .alerts-panel {
+        background: #000000;
+        border: 2px solid #ffffff;
+    }
+}
+
+/* Estilos adicionales para nuevas funcionalidades */
+.nearest-city-info {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    border-left: 4px solid #4ecdc4;
+}
+
+.nearest-city-info h4 {
+    color: #4ecdc4;
+    margin-bottom: 10px;
+}
+
+.nearest-city-info p {
+    color: white;
+    margin-bottom: 5px;
+}
+
+.click-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+.mitigation-effects {
+    position: absolute;
+    pointer-events: none;
+}
+
+.mitigation-effects .effect-indicator {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.mitigation-effects .kinetic-effect {
+    background: #00ff00;
+    box-shadow: 0 0 20px #00ff00;
+}
+
+.mitigation-effects .gravity-effect {
+    background: #0000ff;
+    box-shadow: 0 0 20px #0000ff;
+}
+
+.mitigation-effects .laser-effect {
+    background: #ff00ff;
+    box-shadow: 0 0 20px #ff00ff;
+}
+
+.mitigation-effects .shelter-effect {
+    background: #ffff00;
+    box-shadow: 0 0 20px #ffff00;
+}
+
+/* Mejoras en el panel de mitigación */
+.mitigation-panel {
+    transition: all 0.3s ease;
+}
+
+.mitigation-panel.show {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mitigation-card {
+    transition: all 0.2s ease;
+}
+
+.mitigation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.btn-mitigation {
+    transition: all 0.2s ease;
+}
+
+.btn-mitigation:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-mitigation:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Indicadores de disponibilidad */
+.mitigation-card.unavailable {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+.mitigation-card.unavailable .btn-mitigation {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.mitigation-card.available {
+    opacity: 1;
+    filter: none;
+}
+
+/* Efectos visuales en la Tierra */
+.earth-mitigation-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.mitigation-indicator {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    animation: mitigationPulse 2s infinite;
+}
+
+.mitigation-indicator.kinetic {
+    background: radial-gradient(circle, #00ff00, #008800);
+    box-shadow: 0 0 30px #00ff00;
+}
+
+.mitigation-indicator.gravity {
+    background: radial-gradient(circle, #0000ff, #000088);
+    box-shadow: 0 0 30px #0000ff;
+}
+
+.mitigation-indicator.laser {
+    background: radial-gradient(circle, #ff00ff, #880088);
+    box-shadow: 0 0 30px #ff00ff;
+}
+
+.mitigation-indicator.shelter {
+    background: radial-gradient(circle, #ffff00, #888800);
+    box-shadow: 0 0 30px #ffff00;
+}
+
+@keyframes mitigationPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
