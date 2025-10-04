@@ -109,7 +109,7 @@
 
 ## 🔧 **Archivos Modificados:**
 
-- ✅ `js/earth3d.js` - Tierra realista y selección por clic
+- ✅ `js/earth-map-2d.js` - Tierra realista y selección por clic
 - ✅ `js/mitigation-fixed.js` - Sistema de mitigación corregido
 - ✅ `python/run_simulation.py` - Script 2D mejorado
 - ✅ `styles.css` - Estilos para nuevas funcionalidades

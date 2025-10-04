@@ -13,7 +13,7 @@ import sys
 import os
 from datetime import datetime
 
-# Configuración de colores
+# Configuración de colores / Color configuration.
 COLORS = {
     'BLACK': (0, 0, 0),
     'WHITE': (255, 255, 255),
@@ -45,35 +45,35 @@ class MeteorImpact2D:
         self.clock = pygame.time.Clock()
         self.running = True
         
-        # Estado de la simulación
+        # Estado de la simulación / Simulation state.
         self.simulation_data = None
         self.impact_point = (width // 2, height // 2)
         self.time_elapsed = 0
         self.animation_speed = 1.0
         
-        # Efectos visuales
+        # Efectos visuales / Visual effects.
         self.explosion_particles = []
         self.fire_particles = []
         self.dust_particles = []
         self.shock_waves = []
         self.buildings = []
         
-        # Configuración de la simulación
+        # Configuración de la simulación / Simulation configuration.
         self.show_data_panel = True
         self.show_effects = True
         self.pause_simulation = False
         
-        # Fuentes
+        # Fuentes / Fonts.
         self.font_large = pygame.font.Font(None, 36)
         self.font_medium = pygame.font.Font(None, 24)
         self.font_small = pygame.font.Font(None, 18)
         
-        # Crear entorno inicial
+        # Crear entorno inicial / Create initial environment.
         self.create_environment()
         
     def create_environment(self):
         """Crear el entorno inicial (cielo, horizonte, edificios)"""
-        # Crear edificios aleatorios
+        # Crear edificios aleatorios / Create random buildings.
         self.buildings = []
         for i in range(20):
             x = random.randint(0, self.width)
@@ -92,7 +92,7 @@ class MeteorImpact2D:
         self.simulation_data = data
         self.impact_point = (self.width // 2, self.height // 2)
         
-        # Calcular efectos basados en los datos
+        # Calcular efectos basados en los datos / Calculate effects based on provided data.
         self.calculate_effects()
     
     def calculate_effects(self):
@@ -102,26 +102,26 @@ class MeteorImpact2D:
         
         effects = self.simulation_data.get('effects', {})
         
-        # Calcular radios de efectos
-        self.total_destruction_radius = effects.get('totalDestructionZone', 0) * 10  # Escalar para visualización
+        # Calcular radios de efectos / Calculate effect radii.
+        self.total_destruction_radius = effects.get('totalDestructionZone', 0) * 10  # Escalar para visualización / Scale for visualization.
         self.severe_destruction_radius = effects.get('severeDestructionZone', 0) * 10
         self.moderate_destruction_radius = effects.get('moderateDestructionZone', 0) * 10
         
-        # Calcular efectos secundarios
+        # Calcular efectos secundarios / Calculate secondary effects.
         self.earthquake_magnitude = effects.get('earthquake', {}).get('magnitude', 0)
         self.tsunami_height = effects.get('tsunami', {}).get('height', 0)
         self.fire_radius = effects.get('fire', {}).get('radius', 0) * 10
         self.dust_radius = effects.get('dust', {}).get('radius', 0) * 10
         
-        # Calcular víctimas
+        # Calcular víctimas / Estimate casualties.
         self.casualties = effects.get('casualties', {})
         
-        # Calcular energía
+        # Calcular energía / Calculate energy.
         self.energy_megatons = effects.get('energyMegatons', 0)
         
     def create_explosion(self):
         """Crear efectos de explosión"""
-        # Crear partículas de explosión
+        # Crear partículas de explosión / Create explosion particles.
         for _ in range(100):
             angle = random.uniform(0, 2 * math.pi)
             speed = random.uniform(50, 200)
@@ -138,7 +138,7 @@ class MeteorImpact2D:
                 'size': random.randint(2, 8)
             })
         
-        # Crear ondas de choque
+        # Crear ondas de choque / Create shock waves.
         for i in range(5):
             self.shock_waves.append({
                 'x': self.impact_point[0],
@@ -154,7 +154,7 @@ class MeteorImpact2D:
     def create_fire_effects(self):
         """Crear efectos de incendios"""
         for _ in range(50):
-            # Distribuir incendios alrededor del impacto
+            # Distribuir incendios alrededor del impacto / Distribute fires around the impact.
             angle = random.uniform(0, 2 * math.pi)
             distance = random.uniform(0, self.fire_radius)
             
@@ -176,7 +176,7 @@ class MeteorImpact2D:
     def create_dust_effects(self):
         """Crear efectos de nube de polvo"""
         for _ in range(200):
-            # Crear nube de polvo que se expande
+            # Crear nube de polvo que se expande / Create expanding dust cloud.
             angle = random.uniform(0, 2 * math.pi)
             distance = random.uniform(0, self.dust_radius)
             
@@ -198,30 +198,30 @@ class MeteorImpact2D:
     
     def update_particles(self, dt):
         """Actualizar todas las partículas"""
-        # Actualizar partículas de explosión
+        # Actualizar partículas de explosión / Update explosion particles.
         self.explosion_particles = [p for p in self.explosion_particles if p['lifetime'] > 0]
         for particle in self.explosion_particles:
             particle['x'] += particle['vx'] * dt
             particle['y'] += particle['vy'] * dt
             particle['lifetime'] -= dt
-            particle['vy'] += 50 * dt  # Gravedad
+            particle['vy'] += 50 * dt  # Gravedad / Gravity.
         
-        # Actualizar partículas de fuego
+        # Actualizar partículas de fuego / Update fire particles.
         self.fire_particles = [p for p in self.fire_particles if p['lifetime'] > 0]
         for particle in self.fire_particles:
             particle['x'] += particle['vx'] * dt
             particle['y'] += particle['vy'] * dt
             particle['lifetime'] -= dt
-            particle['vy'] += 20 * dt  # Gravedad más suave
+            particle['vy'] += 20 * dt  # Gravedad más suave / Softer gravity.
         
-        # Actualizar partículas de polvo
+        # Actualizar partículas de polvo / Update dust particles.
         self.dust_particles = [p for p in self.dust_particles if p['lifetime'] > 0]
         for particle in self.dust_particles:
             particle['x'] += particle['vx'] * dt
             particle['y'] += particle['vy'] * dt
             particle['lifetime'] -= dt
         
-        # Actualizar ondas de choque
+        # Actualizar ondas de choque / Update shock waves.
         self.shock_waves = [w for w in self.shock_waves if w['lifetime'] > 0]
         for wave in self.shock_waves:
             wave['radius'] += wave['speed'] * dt
@@ -231,7 +231,7 @@ class MeteorImpact2D:
         """Destruir edificios en la zona de impacto"""
         for building in self.buildings:
             if not building['destroyed']:
-                # Calcular distancia al impacto
+                # Calcular distancia al impacto / Calculate distance to impact.
                 building_center = (
                     building['rect'].x + building['rect'].width // 2,
                     building['rect'].y + building['rect'].height // 2
@@ -242,24 +242,24 @@ class MeteorImpact2D:
                     (building_center[1] - self.impact_point[1])**2
                 )
                 
-                # Destruir edificios en zona de destrucción total
+                # Destruir edificios en zona de destrucción total / Destroy buildings in total destruction zone.
                 if distance <= self.total_destruction_radius:
                     building['destroyed'] = True
                     building['color'] = COLORS['RED']
     
     def draw_background(self):
         """Dibujar el fondo (cielo y horizonte)"""
-        # Gradiente del cielo
+        # Gradiente del cielo / Sky gradient.
         for y in range(self.height // 2):
             color_factor = y / (self.height // 2)
             color = (
-                int(135 + color_factor * 120),  # R
-                int(206 + color_factor * 49),   # G
-                int(235 + color_factor * 20)    # B
+                int(135 + color_factor * 120),  # R / Red component.
+                int(206 + color_factor * 49),   # G / Green component.
+                int(235 + color_factor * 20)    # B / Blue component.
             )
             pygame.draw.line(self.screen, color, (0, y), (self.width, y))
         
-        # Horizonte
+        # Horizonte / Horizon.
         pygame.draw.line(self.screen, COLORS['BROWN'], 
                         (0, self.height // 2), (self.width, self.height // 2), 3)
     
@@ -270,9 +270,9 @@ class MeteorImpact2D:
                 pygame.draw.rect(self.screen, building['color'], building['rect'])
                 pygame.draw.rect(self.screen, COLORS['BLACK'], building['rect'], 2)
             else:
-                # Dibujar edificio destruido
+                # Dibujar edificio destruido / Draw destroyed building.
                 pygame.draw.rect(self.screen, COLORS['DARK_GRAY'], building['rect'])
-                # Agregar efectos de destrucción
+                # Agregar efectos de destrucción / Add destruction effects.
                 for i in range(5):
                     x = building['rect'].x + random.randint(0, building['rect'].width)
                     y = building['rect'].y + random.randint(0, building['rect'].height)
@@ -283,21 +283,21 @@ class MeteorImpact2D:
         if not self.simulation_data:
             return
         
-        # Zona de destrucción moderada
+        # Zona de destrucción moderada / Moderate destruction zone.
         pygame.draw.circle(self.screen, COLORS['YELLOW'], 
                           self.impact_point, int(self.moderate_destruction_radius), 2)
         
-        # Zona de destrucción severa
+        # Zona de destrucción severa / Severe destruction zone.
         pygame.draw.circle(self.screen, COLORS['ORANGE'], 
                           self.impact_point, int(self.severe_destruction_radius), 2)
         
-        # Zona de destrucción total
+        # Zona de destrucción total / Total destruction zone.
         pygame.draw.circle(self.screen, COLORS['RED'], 
                           self.impact_point, int(self.total_destruction_radius), 2)
     
     def draw_particles(self):
         """Dibujar todas las partículas"""
-        # Dibujar partículas de explosión
+        # Dibujar partículas de explosión / Draw explosion particles.
         for particle in self.explosion_particles:
             alpha = particle['lifetime'] / particle['max_lifetime']
             size = int(particle['size'] * alpha)
@@ -305,7 +305,7 @@ class MeteorImpact2D:
                 pygame.draw.circle(self.screen, particle['color'], 
                                 (int(particle['x']), int(particle['y'])), size)
         
-        # Dibujar partículas de fuego
+        # Dibujar partículas de fuego / Draw fire particles.
         for particle in self.fire_particles:
             alpha = particle['lifetime'] / particle['max_lifetime']
             size = int(particle['size'] * alpha)
@@ -313,12 +313,12 @@ class MeteorImpact2D:
                 pygame.draw.circle(self.screen, particle['color'], 
                                 (int(particle['x']), int(particle['y'])), size)
         
-        # Dibujar partículas de polvo
+        # Dibujar partículas de polvo / Draw dust particles.
         for particle in self.dust_particles:
             alpha = particle['lifetime'] / particle['max_lifetime'] * particle['alpha']
             size = int(particle['size'] * alpha)
             if size > 0:
-                # Crear superficie con transparencia
+                # Crear superficie con transparencia / Create transparent surface.
                 dust_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
                 pygame.draw.circle(dust_surface, (*particle['color'], int(alpha * 255)), 
                                 (size, size), size)
@@ -330,7 +330,7 @@ class MeteorImpact2D:
         for wave in self.shock_waves:
             alpha = wave['lifetime'] / wave['max_lifetime']
             if alpha > 0:
-                # Crear superficie con transparencia
+                # Crear superficie con transparencia / Create transparent surface.
                 wave_surface = pygame.Surface((int(wave['radius'] * 2), int(wave['radius'] * 2)), 
                                     pygame.SRCALPHA)
                 pygame.draw.circle(wave_surface, (*wave['color'], int(alpha * 100)), 
@@ -344,16 +344,16 @@ class MeteorImpact2D:
         if not self.show_data_panel or not self.simulation_data:
             return
         
-        # Fondo del panel
+        # Fondo del panel / Panel background.
         panel_rect = pygame.Rect(10, 10, 300, 400)
         pygame.draw.rect(self.screen, COLORS['BLACK'], panel_rect)
         pygame.draw.rect(self.screen, COLORS['WHITE'], panel_rect, 2)
         
-        # Título
+        # Título / Title.
         title_text = self.font_large.render("Datos del Impacto", True, COLORS['WHITE'])
         self.screen.blit(title_text, (20, 20))
         
-        # Datos
+        # Datos / Data.
         y_offset = 60
         data_items = [
             ("Energía Liberada:", f"{self.energy_megatons:.1f} MT"),
@@ -418,10 +418,10 @@ class MeteorImpact2D:
         self.dust_particles = []
         self.shock_waves = []
         
-        # Recrear edificios
+        # Recrear edificios / Recreate buildings.
         self.create_environment()
         
-        # Reiniciar efectos si hay datos
+        # Reiniciar efectos si hay datos / Reset effects when data is available.
         if self.simulation_data:
             self.create_explosion()
             self.create_fire_effects()
@@ -436,22 +436,22 @@ class MeteorImpact2D:
             self.create_dust_effects()
         
         while self.running:
-            dt = self.clock.tick(60) / 1000.0  # Delta time en segundos
+            dt = self.clock.tick(60) / 1000.0  # Delta time en segundos / Delta time in seconds.
             
             if not self.pause_simulation:
                 self.time_elapsed += dt * self.animation_speed
                 
-                # Actualizar efectos
+                # Actualizar efectos / Update effects.
                 self.update_particles(dt)
                 
-                # Destruir edificios progresivamente
-                if self.time_elapsed > 0.5:  # Después de 0.5 segundos
+                # Destruir edificios progresivamente / Destroy buildings progressively.
+                if self.time_elapsed > 0.5:  # Después de 0.5 segundos / After 0.5 seconds.
                     self.destroy_buildings()
             
-            # Manejar eventos
+            # Manejar eventos / Handle events.
             self.handle_events()
             
-            # Dibujar
+            # Dibujar / Render scene.
             self.draw_background()
             self.draw_buildings()
             
@@ -463,17 +463,17 @@ class MeteorImpact2D:
             self.draw_data_panel()
             self.draw_controls()
             
-            # Actualizar pantalla
+            # Actualizar pantalla / Update display.
             pygame.display.flip()
         
         pygame.quit()
 
 def main():
     """Función principal"""
-    # Crear instancia del simulador
+    # Crear instancia del simulador / Create simulator instance.
     simulator = MeteorImpact2D()
     
-    # Datos de ejemplo para la simulación
+    # Datos de ejemplo para la simulación / Example data for the simulation.
     example_data = {
         "effects": {
             "energyMegatons": 15.5,
@@ -499,7 +499,7 @@ def main():
         }
     }
     
-    # Ejecutar simulación
+    # Ejecutar simulación / Run simulation.
     simulator.run_simulation(example_data)
 
 if __name__ == "__main__":

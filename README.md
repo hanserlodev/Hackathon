@@ -144,7 +144,7 @@ app.run(debug=True, host='0.0.0.0', port=5000)
 Editar `js/calculations.js` para ajustar fórmulas científicas.
 
 ### Personalizar Visualización
-Editar `js/earth3d.js` para modificar efectos 3D.
+Editar `js/earth-map-2d.js` para modificar efectos 2D.
 
 ## 🐛 Solución de Problemas
 

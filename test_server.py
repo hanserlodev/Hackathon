@@ -69,7 +69,7 @@ def main():
         'styles.css',
         'server.py',
         'js/main.js',
-        'js/earth3d.js',
+        'js/earth-map-2d.js',
         'python/meteor_impact_2d.py'
     ]
     

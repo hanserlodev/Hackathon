@@ -1,4 +1,4 @@
-// Mapa 2D interactivo para el simulador de impacto de meteoritos
+// Mapa 2D interactivo para el simulador de impacto de meteoritos / Interactive 2D map for the meteor impact simulator.
 class EarthMap2D {
     constructor() {
         this.canvas = null;
@@ -31,12 +31,12 @@ class EarthMap2D {
         this.ctx = this.canvas.getContext('2d');
         this.resizeCanvas();
         
-        // Event listeners
+        // Event listeners / Escuchas de eventos.
         window.addEventListener('resize', () => this.resizeCanvas());
         this.canvas.addEventListener('click', (e) => this.onCanvasClick(e));
         this.canvas.addEventListener('mousemove', (e) => this.onCanvasMouseMove(e));
         
-        // Crear el mapa inicial
+        // Crear el mapa inicial / Create the initial map.
         this.createMap();
         this.startAnimation();
     }
@@ -49,7 +49,7 @@ class EarthMap2D {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         
-        // Calcular escala para mantener proporción del mapa
+        // Calcular escala para mantener proporción del mapa / Calculate scale to maintain map proportion.
         this.scale = Math.min(this.width, this.height) / 400;
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
@@ -58,31 +58,31 @@ class EarthMap2D {
     }
     
     createMap() {
-        // Limpiar canvas
+        // Limpiar canvas / Clear canvas surface.
         this.ctx.clearRect(0, 0, this.width, this.height);
         
-        // Dibujar fondo del espacio
+        // Dibujar fondo del espacio / Draw space background.
         this.drawSpaceBackground();
         
-        // Dibujar la Tierra
+        // Dibujar la Tierra / Draw the Earth.
         this.drawEarth();
         
-        // Dibujar continentes
+        // Dibujar continentes / Draw continents.
         this.drawContinents();
         
-        // Dibujar efectos existentes
+        // Dibujar efectos existentes / Draw existing effects.
         this.drawImpactZones();
         this.drawMeteorTrail();
         this.drawMitigationEffects();
         
-        // Dibujar punto de impacto si existe
+        // Dibujar punto de impacto si existe / Draw impact point when available.
         if (this.impactPoint) {
             this.drawImpactPoint();
         }
     }
     
     drawSpaceBackground() {
-        // Gradiente del espacio
+        // Gradiente del espacio / Space gradient.
         const gradient = this.ctx.createRadialGradient(
             this.centerX, this.centerY, 0,
             this.centerX, this.centerY, Math.max(this.width, this.height)
@@ -94,7 +94,7 @@ class EarthMap2D {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.width, this.height);
         
-        // Dibujar estrellas
+        // Dibujar estrellas / Draw stars.
         this.drawStars();
     }
     
@@ -114,7 +114,7 @@ class EarthMap2D {
     drawEarth() {
         const earthRadius = 150 * this.scale;
         
-        // Gradiente de la Tierra
+        // Gradiente de la Tierra / Earth gradient.
         const gradient = this.ctx.createRadialGradient(
             this.centerX - earthRadius * 0.3, this.centerY - earthRadius * 0.3, 0,
             this.centerX, this.centerY, earthRadius
@@ -128,7 +128,7 @@ class EarthMap2D {
         this.ctx.arc(this.centerX, this.centerY, earthRadius, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Borde de la Tierra
+        // Borde de la Tierra / Earth border.
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
@@ -137,38 +137,38 @@ class EarthMap2D {
     drawContinents() {
         const earthRadius = 150 * this.scale;
         
-        // América del Norte
+        // América del Norte / North America.
         this.ctx.fillStyle = '#2d5016';
         this.ctx.beginPath();
         this.ctx.arc(this.centerX - earthRadius * 0.4, this.centerY - earthRadius * 0.2, earthRadius * 0.3, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // América del Sur
+        // América del Sur / South America.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX - earthRadius * 0.3, this.centerY + earthRadius * 0.3, earthRadius * 0.25, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Europa
+        // Europa / Europe.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.1, this.centerY - earthRadius * 0.3, earthRadius * 0.2, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // África
+        // África / Africa.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.15, this.centerY + earthRadius * 0.1, earthRadius * 0.25, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Asia
+        // Asia / Asia.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.4, this.centerY - earthRadius * 0.1, earthRadius * 0.35, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Australia
+        // Australia / Australia.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.5, this.centerY + earthRadius * 0.4, earthRadius * 0.15, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Agregar detalles
+        // Agregar detalles / Add details.
         this.drawVegetation();
         this.drawDeserts();
     }
@@ -176,15 +176,15 @@ class EarthMap2D {
     drawVegetation() {
         const earthRadius = 150 * this.scale;
         
-        // Bosques tropicales (verde más oscuro)
+        // Bosques tropicales (verde más oscuro) / Tropical forests (darker green).
         this.ctx.fillStyle = '#1e3a0f';
         
-        // Amazonas
+        // Amazonas / Amazon rainforest.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX - earthRadius * 0.25, this.centerY + earthRadius * 0.2, earthRadius * 0.15, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // África central
+        // África central / Central Africa.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.1, this.centerY + earthRadius * 0.15, earthRadius * 0.12, 0, 2 * Math.PI);
         this.ctx.fill();
@@ -193,15 +193,15 @@ class EarthMap2D {
     drawDeserts() {
         const earthRadius = 150 * this.scale;
         
-        // Desiertos (amarillo-marrón)
+        // Desiertos (amarillo-marrón) / Deserts (yellow-brown).
         this.ctx.fillStyle = '#8b7355';
         
-        // Sahara
+        // Sahara / Sahara desert.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.05, this.centerY - earthRadius * 0.1, earthRadius * 0.2, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Desierto de Gobi
+        // Desierto de Gobi / Gobi desert.
         this.ctx.beginPath();
         this.ctx.arc(this.centerX + earthRadius * 0.35, this.centerY - earthRadius * 0.05, earthRadius * 0.15, 0, 2 * Math.PI);
         this.ctx.fill();
@@ -213,23 +213,23 @@ class EarthMap2D {
         const x = this.impactPoint.x;
         const y = this.impactPoint.y;
         
-        // Círculo pulsante
+        // Círculo pulsante / Pulsating circle.
         const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 1;
         const radius = 8 * pulse;
         
-        // Sombra
+        // Sombra / Shadow.
         this.ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
         this.ctx.beginPath();
         this.ctx.arc(x, y + 2, radius + 2, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Punto principal
+        // Punto principal / Main point.
         this.ctx.fillStyle = '#ff0000';
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
         this.ctx.fill();
         
-        // Borde brillante
+        // Borde brillante / Bright border.
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
@@ -293,26 +293,26 @@ class EarthMap2D {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
         
-        // Verificar si el clic está dentro de la Tierra
+        // Verificar si el clic está dentro de la Tierra / Check if the click is inside Earth.
         const earthRadius = 150 * this.scale;
         const distance = Math.sqrt(
             Math.pow(x - this.centerX, 2) + Math.pow(y - this.centerY, 2)
         );
         
         if (distance <= earthRadius) {
-            // Convertir coordenadas de pantalla a coordenadas geográficas
+            // Convertir coordenadas de pantalla a coordenadas geográficas / Convert screen coordinates to geographic coordinates.
             const lat = this.screenToLatitude(y);
             const lon = this.screenToLongitude(x);
             
-            // Establecer punto de impacto
+            // Establecer punto de impacto / Set impact point.
             this.setImpactPoint(x, y, lat, lon);
             
-            // Notificar a la simulación principal
+            // Notificar a la simulación principal / Notify the main simulation.
             if (window.meteorSimulation) {
                 window.meteorSimulation.setImpactLocation(lat, lon);
             }
             
-            // Mostrar mensaje
+            // Mostrar mensaje / Display message.
             this.showClickMessage(lat, lon);
         }
     }
@@ -322,7 +322,7 @@ class EarthMap2D {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
         
-        // Cambiar cursor si está sobre la Tierra
+        // Cambiar cursor si está sobre la Tierra / Change cursor when hovering over Earth.
         const earthRadius = 150 * this.scale;
         const distance = Math.sqrt(
             Math.pow(x - this.centerX, 2) + Math.pow(y - this.centerY, 2)
@@ -346,17 +346,17 @@ class EarthMap2D {
     setImpactPoint(x, y, lat, lon) {
         this.impactPoint = { x, y, lat, lon };
         
-        // Buscar ciudad más cercana
+        // Buscar ciudad más cercana / Find nearest city.
         this.findNearestCity(lat, lon);
         
-        // Limpiar efectos anteriores
+        // Limpiar efectos anteriores / Clear previous effects.
         this.impactZones = [];
         this.meteorTrail = [];
         this.mitigationEffects = [];
     }
     
     async findNearestCity(lat, lon) {
-        // Lista de ciudades principales (misma que en earth3d.js)
+        // Lista de ciudades principales (misma que en earth3d.js) / Main cities list (same as earth3d.js).
         const majorCities = [
             { name: "Nueva York", country: "Estados Unidos", lat: 40.7128, lon: -74.0060 },
             { name: "Londres", country: "Reino Unido", lat: 51.5074, lon: -0.1278 },
@@ -423,7 +423,7 @@ class EarthMap2D {
             { name: "Chisinau", country: "Moldavia", lat: 47.0105, lon: 28.8638 }
         ];
         
-        // Calcular distancia a cada ciudad
+        // Calcular distancia a cada ciudad / Calculate distance to each city.
         let nearestCity = null;
         let minDistance = Infinity;
         
@@ -436,10 +436,10 @@ class EarthMap2D {
         }
         
         if (nearestCity) {
-            // Mostrar información de la ciudad más cercana
+            // Mostrar información de la ciudad más cercana / Display nearest city information.
             this.showNearestCityInfo(nearestCity, minDistance);
             
-            // Actualizar el campo de ubicación
+            // Actualizar el campo de ubicación / Update location field.
             const locationInput = document.getElementById('location-input');
             if (locationInput) {
                 locationInput.value = `${nearestCity.name}, ${nearestCity.country}`;
@@ -452,8 +452,8 @@ class EarthMap2D {
     }
     
     calculateDistance(lat1, lon1, lat2, lon2) {
-        // Fórmula de Haversine para calcular distancia entre dos puntos
-        const R = 6371; // Radio de la Tierra en km
+        // Fórmula de Haversine para calcular distancia entre dos puntos / Haversine formula to calculate distance between two points.
+        const R = 6371; // Radio de la Tierra en km / Earth's radius in km.
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -464,7 +464,7 @@ class EarthMap2D {
     }
     
     showNearestCityInfo(city, distance) {
-        // Crear o actualizar información de ciudad más cercana
+        // Crear o actualizar información de ciudad más cercana / Create or update nearest city info.
         let cityInfo = document.getElementById('nearest-city-info');
         if (!cityInfo) {
             cityInfo = document.createElement('div');
@@ -483,7 +483,7 @@ class EarthMap2D {
     }
     
     showClickMessage(lat, lon) {
-        // Crear mensaje temporal
+        // Crear mensaje temporal / Create temporary message.
         const message = document.createElement('div');
         message.className = 'click-message';
         message.innerHTML = `
@@ -494,7 +494,7 @@ class EarthMap2D {
         
         document.body.appendChild(message);
         
-        // Auto-remover después de 3 segundos
+        // Auto-remover después de 3 segundos / Auto-remove after three seconds.
         setTimeout(() => {
             if (message.parentElement) {
                 message.remove();
@@ -502,13 +502,13 @@ class EarthMap2D {
         }, 3000);
     }
     
-    // Métodos para simulación de impacto
+    // Métodos para simulación de impacto / Impact simulation methods.
     animateMeteorToEarth(lat, lon, duration = 3000) {
         if (!this.impactPoint) return;
         
         this.isAnimating = true;
         
-        // Crear trayectoria del meteorito
+        // Crear trayectoria del meteorito / Create meteor trajectory.
         const startX = this.centerX + 200;
         const startY = this.centerY - 200;
         const endX = this.impactPoint.x;
@@ -520,13 +520,13 @@ class EarthMap2D {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
-            // Interpolación suave
+            // Interpolación suave / Smooth interpolation.
             const easeProgress = 1 - Math.pow(1 - progress, 3);
             
             const currentX = startX + (endX - startX) * easeProgress;
             const currentY = startY + (endY - startY) * easeProgress;
             
-            // Actualizar trayectoria
+            // Actualizar trayectoria / Update trajectory.
             this.meteorTrail.push({ x: currentX, y: currentY });
             if (this.meteorTrail.length > 20) {
                 this.meteorTrail.shift();
@@ -546,19 +546,19 @@ class EarthMap2D {
     createImpactEffect() {
         if (!this.impactPoint) return;
         
-        // Crear zonas de impacto
+        // Crear zonas de impacto / Create impact zones.
         this.impactZones = [
             { radius: 20, color: '#ff0000' },
             { radius: 40, color: '#ff6600' },
             { radius: 60, color: '#ffaa00' }
         ];
         
-        // Crear explosión
+        // Crear explosión / Create explosion visualization.
         this.createExplosion();
     }
     
     createExplosion() {
-        // Crear partículas de explosión
+        // Crear partículas de explosión / Create explosion particles.
         for (let i = 0; i < 50; i++) {
             const angle = Math.random() * 2 * Math.PI;
             const distance = Math.random() * 30;
@@ -576,11 +576,11 @@ class EarthMap2D {
         }
     }
     
-    // Métodos para mitigación
+    // Métodos para mitigación / Mitigation methods.
     showMitigationEffect(method) {
         if (!this.impactPoint) return;
         
-        // Limpiar efectos anteriores
+        // Limpiar efectos anteriores / Clear previous mitigation effects.
         this.mitigationEffects = this.mitigationEffects.filter(effect => effect.type !== 'mitigation');
         
         const x = this.impactPoint.x;
@@ -603,7 +603,7 @@ class EarthMap2D {
     }
     
     createKineticEffect(x, y) {
-        // Nave espacial
+        // Nave espacial / Spacecraft.
         this.mitigationEffects.push({
             x: x - 30,
             y: y - 30,
@@ -613,7 +613,7 @@ class EarthMap2D {
             type: 'mitigation'
         });
         
-        // Trayectoria
+        // Trayectoria / Trajectory.
         for (let i = 0; i < 10; i++) {
             this.mitigationEffects.push({
                 x: x - 30 + i * 3,
@@ -627,7 +627,7 @@ class EarthMap2D {
     }
     
     createGravityEffect(x, y) {
-        // Nave masiva
+        // Nave masiva / Massive craft.
         this.mitigationEffects.push({
             x: x - 20,
             y: y - 20,
@@ -637,7 +637,7 @@ class EarthMap2D {
             type: 'mitigation'
         });
         
-        // Campo gravitacional
+        // Campo gravitacional / Gravitational field.
         this.mitigationEffects.push({
             x: x,
             y: y,
@@ -649,7 +649,7 @@ class EarthMap2D {
     }
     
     createLaserEffect(x, y) {
-        // Estación láser
+        // Estación láser / Laser station.
         this.mitigationEffects.push({
             x: x - 25,
             y: y - 25,
@@ -659,7 +659,7 @@ class EarthMap2D {
             type: 'mitigation'
         });
         
-        // Haz láser
+        // Haz láser / Laser beam.
         for (let i = 0; i < 15; i++) {
             this.mitigationEffects.push({
                 x: x - 25 + i * 1.5,
@@ -673,7 +673,7 @@ class EarthMap2D {
     }
     
     createShelterEffect(x, y) {
-        // Refugios alrededor del impacto
+        // Refugios alrededor del impacto / Shelters around the impact.
         for (let i = 0; i < 8; i++) {
             const angle = (i / 8) * 2 * Math.PI;
             const radius = 25;
@@ -712,5 +712,5 @@ class EarthMap2D {
     }
 }
 
-// Exportar para uso global
+// Exportar para uso global / Expose globally.
 window.EarthMap2D = EarthMap2D;

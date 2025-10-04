@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script modificado para recibir datos desde el servidor Flask
+Script modificado para recibir datos desde el servidor Flask / Script adapted to receive data from the Flask server.
 """
 
 import pygame
@@ -13,7 +13,7 @@ import os
 import argparse
 from datetime import datetime
 
-# Importar la clase principal
+# Importar la clase principal / Import the main class.
 from meteor_impact_2d import MeteorImpact2D
 
 def main():
@@ -22,10 +22,10 @@ def main():
     parser.add_argument('--data-file', help='Archivo JSON con datos de simulación')
     args = parser.parse_args()
     
-    # Crear instancia del simulador
+    # Crear instancia del simulador / Create simulator instance.
     simulator = MeteorImpact2D()
     
-    # Cargar datos si se proporciona un archivo
+    # Cargar datos si se proporciona un archivo / Load data file when provided.
     simulation_data = None
     if args.data_file and os.path.exists(args.data_file):
         try:
@@ -36,7 +36,7 @@ def main():
             print(f"❌ Error al cargar datos: {e}")
             simulation_data = None
     
-    # Si no hay datos, usar datos de ejemplo
+    # Si no hay datos, usar datos de ejemplo / Use sample data when no file is provided.
     if not simulation_data:
         print("⚠️ No se encontraron datos de simulación, usando datos de ejemplo")
         simulation_data = {
@@ -64,7 +64,7 @@ def main():
             }
         }
     
-    # Ejecutar simulación
+    # Ejecutar simulación / Run simulation.
     print("🚀 Iniciando simulación 2D...")
     print("📋 Instrucciones:")
     print("- ESPACIO: Pausar/Reanudar")
