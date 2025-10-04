@@ -9,6 +9,7 @@ class ImpactCalculations {
             gold: 19.3,
             comet: 0.0001,
             carbon: 2.2,
+            stone: 3.0,
         };
 
         // Multiplicadores de diámetro de cráter / Crater diameter multipliers.

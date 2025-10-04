@@ -10,41 +10,42 @@
     <div class="container">
         <!-- Encabezado principal / Main header -->
         <header class="header">
-            <h1>🌍 Simulador de Impacto de Meteoritos</h1>
-            <p>Explora las consecuencias de impactos de meteoritos en tiempo real</p>
+            <h1>🌍 Simulation of Meteorite Impact</h1>
+            <p>Explore the consequences of meteorite impacts in real-time</p>
         </header>
 
         <!-- Panel de control / Control panel -->
         <div class="control-panel">
             <div class="input-group">
-                <label for="location-input">Ubicación del Impacto:</label>
-                <input type="text" id="location-input" placeholder="Ej: Ciudad de México o 19.4326, -99.1332">
-                <button id="search-location">Buscar</button>
+                <label for="location-input">Location of Impact:</label>
+                <input type="text" id="location-input" placeholder="E.g. Mexico City or 19.4326, -99.1332">
+                <button id="search-location">Search</button>
             </div>
 
             <div class="meteor-params">
-                <h3>Parámetros del Meteorito</h3>
+                <h3>Meteorite Parameters</h3>
                 <div class="param-group">
-                    <label for="meteor-size">Tamaño (metros):</label>
+                    <label for="meteor-size">Size (meters):</label>
                     <input type="range" id="meteor-size" min="10" max="1000" value="180">
                     <span id="size-value">180m</span>
                 </div>
 
                 <div class="param-group">
-                    <label for="meteor-speed">Velocidad (km/s):</label>
+                    <label for="meteor-speed">Speed (km/s):</label>
                     <input type="range" id="meteor-speed" min="11" max="70" value="24">
                     <span id="speed-value">24 km/s</span>
                 </div>
 
                 <div class="param-group">
-                    <label for="meteor-density">Densidad:</label>
+                    <label for="meteor-density">Density:</label>
                     <select id="meteor-density">
-                        <option value="iron">Hierro (7.8 g/cm³)</option>
-                        <option value="stone" selected>Piedra (3.0 g/cm³)</option>
-                        <option value="ice">Hielo (0.9 g/cm³)</option>
-                        <option value="gold">Oro (19.3 g/cm³)</option>
-                        <option value="comet">Cometa (0.0001 g/cm³)</option>
-                        <option value="carbon">Asteroide de carbono (2.2 g/cm³)</option>
+                        <option value="iron">Iron (7.8 g/cm³)</option>
+                        <option value="stone" selected>Stone (3.0 g/cm³)</option>
+                        <option value="ice">Ice (0.9 g/cm³)</option>
+                        <option value="gold">Gold (19.3 g/cm³)</option>
+                        <option value="comet">Comet (0.0001 g/cm³)</option>
+                        <option value="carbon">Carbonaceous Asteroid (2.2 g/cm³)</option>
+                        <option value="stone">Stone Meteorite (3.0 g/cm³)</option>
                     </select>
                 </div>
             </div>
