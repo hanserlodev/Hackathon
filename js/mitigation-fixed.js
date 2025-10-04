@@ -1,8 +1,8 @@
-// Sistema de métodos de mitigación y desviación corregido
+// Sistema de métodos de mitigación y desviación corregido / Corrected mitigation and deflection system.
 class MitigationSystem {
     constructor() {
         this.activeMitigations = [];
-        this.currentMitigation = null; // Solo una mitigación activa
+        this.currentMitigation = null; // Solo una mitigación activa / Only one mitigation active.
         this.mitigationMethods = {
             kinetic: {
                 name: 'Impacto Cinético',
@@ -12,7 +12,7 @@ class MitigationSystem {
                 timeRequired: '2-5 años',
                 requirements: 'Nave espacial, sistema de navegación preciso',
                 limitations: 'Efectivo solo para meteoritos pequeños a medianos',
-                maxEnergy: 1000 // Megatones
+                maxEnergy: 1000 // Megatones / Megatons.
             },
             gravity: {
                 name: 'Gravedad Artificial',
@@ -22,7 +22,7 @@ class MitigationSystem {
                 timeRequired: '5-10 años',
                 requirements: 'Nave muy masiva, sistema de propulsión avanzado',
                 limitations: 'Requiere mucho tiempo y recursos',
-                maxEnergy: 100 // Megatones
+                maxEnergy: 100 // Megatones / Megatons.
             },
             laser: {
                 name: 'Láser Ablativo',
@@ -32,7 +32,7 @@ class MitigationSystem {
                 timeRequired: '1-3 años',
                 requirements: 'Sistema láser de alta potencia, energía solar',
                 limitations: 'Efectivo solo para meteoritos pequeños',
-                maxEnergy: 10 // Megatones
+                maxEnergy: 10 // Megatones / Megatons.
             },
             shelters: {
                 name: 'Refugios Subterráneos',
@@ -42,7 +42,7 @@ class MitigationSystem {
                 timeRequired: '1-2 años',
                 requirements: 'Construcción subterránea, sistemas de soporte vital',
                 limitations: 'Solo protege a quienes están en los refugios',
-                maxEnergy: Infinity // Siempre disponible
+                maxEnergy: Infinity // Siempre disponible / Always available.
             }
         };
         
@@ -54,7 +54,7 @@ class MitigationSystem {
     }
     
     setupEventListeners() {
-        // Botones de mitigación
+        // Botones de mitigación / Mitigation buttons event binding.
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-mitigation')) {
                 const method = e.target.dataset.method;
@@ -63,14 +63,14 @@ class MitigationSystem {
         });
     }
     
-    // Aplicar método de mitigación
+    // Aplicar método de mitigación / Apply mitigation method.
     applyMitigation(method) {
         if (!window.meteorSimulation || !window.meteorSimulation.currentSimulation) {
             this.showError('No hay simulación activa para aplicar mitigación');
             return;
         }
         
-        // Si ya hay una mitigación activa, removerla primero
+        // Si ya hay una mitigación activa, removerla primero / Remove existing mitigation first.
         if (this.currentMitigation) {
             this.removeCurrentMitigation();
         }
@@ -78,36 +78,36 @@ class MitigationSystem {
         const simulation = window.meteorSimulation.currentSimulation;
         const mitigationInfo = this.mitigationMethods[method];
         
-        // Verificar si el método es aplicable
+        // Verificar si el método es aplicable / Validate if the method is applicable.
         if (!this.isMethodApplicable(method, simulation.effects)) {
             this.showError(`El método ${mitigationInfo.name} no es aplicable para este impacto`);
             return;
         }
         
-        // Calcular efectos de la mitigación
+        // Calcular efectos de la mitigación / Calculate mitigation effects.
         const mitigationEffects = this.calculateMitigationEffects(method, simulation.effects);
         
-        // Aplicar mitigación
+        // Aplicar mitigación / Store mitigation state.
         this.currentMitigation = {
             method: method,
             effects: mitigationEffects,
             appliedAt: Date.now()
         };
         
-        // Mostrar resultados
+        // Mostrar resultados / Present mitigation results.
         this.displayMitigationResults(method, mitigationEffects);
         
-        // Actualizar simulación
+        // Actualizar simulación / Update simulation with mitigation.
         this.updateSimulationWithMitigation(simulation, mitigationEffects);
         
-        // Mostrar efectos en la Tierra
+        // Mostrar efectos en la Tierra / Display Earth-side mitigation effects.
         this.showMitigationOnEarth(method);
         
-        // Actualizar botones
+        // Actualizar botones / Refresh mitigation buttons.
         this.updateMitigationButtons();
     }
     
-    // Verificar si un método es aplicable
+    // Verificar si un método es aplicable / Check if a method can be applied.
     isMethodApplicable(method, effects) {
         const energyMegatons = effects.energyMegatons;
         const mitigationInfo = this.mitigationMethods[method];
@@ -115,7 +115,7 @@ class MitigationSystem {
         return energyMegatons <= mitigationInfo.maxEnergy;
     }
     
-    // Calcular efectos de la mitigación
+    // Calcular efectos de la mitigación / Compute mitigation outcome metrics.
     calculateMitigationEffects(method, originalEffects) {
         const mitigationInfo = this.mitigationMethods[method];
         const effectiveness = mitigationInfo.effectiveness;
@@ -145,11 +145,11 @@ class MitigationSystem {
         return mitigationEffects;
     }
     
-    // Calcular mitigación por impacto cinético
+    // Calcular mitigación por impacto cinético / Calculate kinetic impact mitigation.
     calculateKineticMitigation(originalEffects, effectiveness) {
         const energyMegatons = originalEffects.energyMegatons;
         
-        // Reducción de energía basada en desviación
+        // Reducción de energía basada en desviación / Energy reduction based on trajectory deflection.
         const energyReduction = Math.min(0.7, effectiveness * (energyMegatons / 1000));
         
         return {
@@ -161,11 +161,11 @@ class MitigationSystem {
         };
     }
     
-    // Calcular mitigación por gravedad artificial
+    // Calcular mitigación por gravedad artificial / Calculate gravity tractor mitigation.
     calculateGravityMitigation(originalEffects, effectiveness) {
         const energyMegatons = originalEffects.energyMegatons;
         
-        // Reducción más gradual pero consistente
+        // Reducción más gradual pero consistente / Gradual yet consistent reduction.
         const energyReduction = Math.min(0.5, effectiveness * (energyMegatons / 500));
         
         return {
@@ -177,11 +177,11 @@ class MitigationSystem {
         };
     }
     
-    // Calcular mitigación por láser
+    // Calcular mitigación por láser / Calculate laser ablation mitigation.
     calculateLaserMitigation(originalEffects, effectiveness) {
         const energyMegatons = originalEffects.energyMegatons;
         
-        // Reducción limitada pero rápida
+        // Reducción limitada pero rápida / Limited but fast reduction.
         const energyReduction = Math.min(0.3, effectiveness * (energyMegatons / 100));
         
         return {
@@ -193,36 +193,36 @@ class MitigationSystem {
         };
     }
     
-    // Calcular mitigación por refugios
+    // Calcular mitigación por refugios / Calculate shelter mitigation.
     calculateShelterMitigation(originalEffects, effectiveness) {
-        // Los refugios no reducen la energía del impacto, pero protegen a las personas
-        const shelterCapacity = 0.3; // 30% de la población puede ser protegida
+        // Los refugios no reducen la energía del impacto, pero protegen a las personas / Shelters do not reduce impact energy but protect people.
+        const shelterCapacity = 0.3; // 30% de la población puede ser protegida / 30% of the population can be protected.
         
         return {
-            energyReduction: 0, // No reduce la energía
+            energyReduction: 0, // No reduce la energía / Does not reduce impact energy.
             casualtyReduction: shelterCapacity * effectiveness,
-            damageReduction: 0, // No reduce el daño físico
+            damageReduction: 0, // No reduce el daño físico / Does not reduce physical damage.
             successProbability: effectiveness,
             method: 'shelters',
             shelterCapacity: shelterCapacity
         };
     }
     
-    // Mostrar efectos de mitigación en la Tierra
+    // Mostrar efectos de mitigación en la Tierra / Visualize mitigation effects on Earth.
     showMitigationOnEarth(method) {
         const earthMap2D = window.meteorSimulation.earthMap2D;
         if (!earthMap2D) return;
         
-        // Remover efectos anteriores
+        // Remover efectos anteriores / Remove previous visual effects.
         earthMap2D.removeMitigationEffects();
         
-        // Crear efectos específicos según el método
+        // Crear efectos específicos según el método / Create method-specific effects.
         earthMap2D.showMitigationEffect(method);
     }
     
-    // Los efectos visuales ahora se manejan en el mapa 2D
+    // Los efectos visuales ahora se manejan en el mapa 2D / Visual effects are now handled in the 2D map.
     
-    // Remover mitigación actual
+    // Remover mitigación actual / Remove the currently active mitigation.
     removeCurrentMitigation() {
         if (this.currentMitigation) {
             const earthMap2D = window.meteorSimulation.earthMap2D;
@@ -235,7 +235,7 @@ class MitigationSystem {
         }
     }
     
-    // Actualizar botones de mitigación
+    // Actualizar botones de mitigación / Refresh mitigation button states.
     updateMitigationButtons() {
         const buttons = document.querySelectorAll('.btn-mitigation');
         
@@ -253,11 +253,11 @@ class MitigationSystem {
         });
     }
     
-    // Mostrar resultados de la mitigación
+    // Mostrar resultados de la mitigación / Display mitigation results.
     displayMitigationResults(method, effects) {
         const mitigationInfo = this.mitigationMethods[method];
         
-        // Crear modal de resultados
+        // Crear modal de resultados / Create mitigation results modal.
         const modal = document.createElement('div');
         modal.className = 'mitigation-modal';
         modal.innerHTML = `
@@ -309,7 +309,7 @@ class MitigationSystem {
         
         document.body.appendChild(modal);
         
-        // Event listeners para el modal
+        // Event listeners para el modal / Modal event listeners.
         modal.querySelector('.close-modal').addEventListener('click', () => {
             modal.remove();
         });
@@ -321,7 +321,7 @@ class MitigationSystem {
         });
     }
     
-    // Generar recomendaciones específicas
+    // Generar recomendaciones específicas / Generate specific recommendations.
     generateRecommendations(method, effects) {
         const recommendations = [];
         
@@ -356,24 +356,24 @@ class MitigationSystem {
         return recommendations.map(rec => `<li>${rec}</li>`).join('');
     }
     
-    // Actualizar simulación con mitigación
+    // Actualizar simulación con mitigación / Update simulation with mitigation effects.
     updateSimulationWithMitigation(simulation, mitigationEffects) {
-        // Crear nueva simulación con efectos mitigados
+        // Crear nueva simulación con efectos mitigados / Create new simulation snapshot with mitigation applied.
         const mitigatedEffects = this.applyMitigationToEffects(simulation.effects, mitigationEffects);
         
-        // Mostrar comparación
+        // Mostrar comparación / Display comparison summary.
         this.showMitigationComparison(simulation.effects, mitigatedEffects);
     }
     
-    // Aplicar mitigación a los efectos
+    // Aplicar mitigación a los efectos / Apply mitigation modifiers to effects.
     applyMitigationToEffects(originalEffects, mitigationEffects) {
         const mitigatedEffects = { ...originalEffects };
         
-        // Reducir energía
+        // Reducir energía / Reduce energy value.
         mitigatedEffects.energyMegatons *= (1 - mitigationEffects.energyReduction);
         mitigatedEffects.energy *= (1 - mitigationEffects.energyReduction);
         
-        // Aplicar reducciones de mitigación
+        // Aplicar reducciones de mitigación / Apply mitigation reductions.
         mitigatedEffects.casualties.fatalities = Math.round(
             originalEffects.casualties.fatalities * (1 - mitigationEffects.casualtyReduction)
         );
@@ -388,7 +388,7 @@ class MitigationSystem {
         return mitigatedEffects;
     }
     
-    // Mostrar comparación de mitigación
+    // Mostrar comparación de mitigación / Display mitigation comparison.
     showMitigationComparison(originalEffects, mitigatedEffects) {
         const comparisonDiv = document.createElement('div');
         comparisonDiv.className = 'mitigation-comparison';
@@ -419,7 +419,7 @@ class MitigationSystem {
         document.querySelector('.main-content').appendChild(comparisonDiv);
     }
     
-    // Funciones de utilidad
+    // Funciones de utilidad / Utility helpers.
     formatEnergy(megatons) {
         if (megatons >= 1000) {
             return `${(megatons / 1000).toFixed(1)} GT`;
@@ -458,5 +458,5 @@ class MitigationSystem {
     }
 }
 
-// Exportar para uso global
+// Exportar para uso global / Expose globally.
 window.MitigationSystem = MitigationSystem;

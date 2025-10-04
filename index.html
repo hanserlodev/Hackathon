@@ -4,51 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Impacto de Meteoritos</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j7kGStGkM9CqzH1J7g7h3lZ8B3zt+Jf2g7uHkLk=" crossorigin="">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Encabezado principal / Main header -->
         <header class="header">
             <h1>🌍 Simulador de Impacto de Meteoritos</h1>
             <p>Explora las consecuencias de impactos de meteoritos en tiempo real</p>
         </header>
 
-        <!-- Panel de Control -->
+        <!-- Panel de control / Control panel -->
         <div class="control-panel">
             <div class="input-group">
                 <label for="location-input">Ubicación del Impacto:</label>
-                <input type="text" id="location-input" placeholder="Ej: Madrid, España o 40.4168, -3.7038">
+                <input type="text" id="location-input" placeholder="Ej: Denver, CO o 39.7392, -104.9903">
                 <button id="search-location">Buscar</button>
             </div>
-            
+
             <div class="meteor-params">
                 <h3>Parámetros del Meteorito</h3>
                 <div class="param-group">
                     <label for="meteor-size">Tamaño (metros):</label>
-                    <input type="range" id="meteor-size" min="10" max="1000" value="100">
-                    <span id="size-value">100m</span>
+                    <input type="range" id="meteor-size" min="10" max="1000" value="180">
+                    <span id="size-value">180m</span>
                 </div>
-                
+
                 <div class="param-group">
                     <label for="meteor-speed">Velocidad (km/s):</label>
-                    <input type="range" id="meteor-speed" min="11" max="70" value="20">
-                    <span id="speed-value">20 km/s</span>
+                    <input type="range" id="meteor-speed" min="11" max="70" value="24">
+                    <span id="speed-value">24 km/s</span>
                 </div>
-                
+
                 <div class="param-group">
                     <label for="meteor-density">Densidad:</label>
                     <select id="meteor-density">
                         <option value="iron">Hierro (7.8 g/cm³)</option>
                         <option value="stone" selected>Piedra (3.0 g/cm³)</option>
                         <option value="ice">Hielo (0.9 g/cm³)</option>
-                        <option value="gold"> Oro (19.3 g/cm³)</option>
-                        <option value = "comet"> Cometa (0.0001 g/cm³)</option>
-                        <option value="carbon"> Asteroide de carbono (2.2 g/cm³)</option>
+                        <option value="gold">Oro (19.3 g/cm³)</option>
+                        <option value="comet">Cometa (0.0001 g/cm³)</option>
+                        <option value="carbon">Asteroide de carbono (2.2 g/cm³)</option>
                     </select>
                 </div>
             </div>
-            
+
             <div class="simulation-controls">
                 <button id="start-simulation" class="btn-primary">Iniciar Simulación</button>
                 <button id="reset-simulation" class="btn-secondary">Reiniciar</button>
@@ -56,13 +57,15 @@
             </div>
         </div>
 
-        <!-- Visualización Principal -->
+        <!-- Contenido principal / Main content -->
         <div class="main-content">
             <div class="visualization-container">
                 <div id="earth-container" class="earth-view">
-                    <canvas id="earth-canvas"></canvas>
+                    <div id="earth-map" class="earth-map" role="img" aria-label="Mapa de OpenStreetMap centrado en Estados Unidos continental"></div>
+                    <div id="impact-marker" class="impact-marker" aria-hidden="true"></div>
+                    <div class="map-attribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
                 </div>
-                
+
                 <div class="impact-data" id="impact-data">
                     <h3>Datos del Impacto</h3>
                     <div class="data-grid">
@@ -85,7 +88,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="effects-panel">
                 <h3>Efectos Secundarios</h3>
                 <div class="effects-grid">
@@ -96,7 +99,7 @@
                             <p id="earthquake-magnitude">Magnitud: -</p>
                         </div>
                     </div>
-                    
+
                     <div class="effect-item" id="tsunami-effect">
                         <div class="effect-icon">🌊</div>
                         <div class="effect-info">
@@ -104,7 +107,7 @@
                             <p id="tsunami-height">Altura: -</p>
                         </div>
                     </div>
-                    
+
                     <div class="effect-item" id="fire-effect">
                         <div class="effect-icon">🔥</div>
                         <div class="effect-info">
@@ -112,7 +115,7 @@
                             <p id="fire-radius">Radio: -</p>
                         </div>
                     </div>
-                    
+
                     <div class="effect-item" id="dust-effect">
                         <div class="effect-icon">🌫️</div>
                         <div class="effect-info">
@@ -124,7 +127,39 @@
             </div>
         </div>
 
-        <!-- Panel de Mitigación -->
+        <!-- Panel de estadísticas / Statistics panel -->
+        <section class="statistics-panel" aria-labelledby="statistics-title">
+            <h2 id="statistics-title">📊 Estadísticas de la Semana</h2>
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <h3>Total de objetos</h3>
+                    <p id="stat-total">121</p>
+                    <span id="stat-hazard-percentage">2.5% peligrosos</span>
+                </article>
+                <article class="stat-card">
+                    <h3>Potencialmente peligrosos</h3>
+                    <p id="stat-hazardous">3</p>
+                    <span>Vigilancia activa</span>
+                </article>
+                <article class="stat-card">
+                    <h3>Tamaño promedio</h3>
+                    <p id="stat-average-size">88 m</p>
+                    <span>Estimación global</span>
+                </article>
+                <article class="stat-card">
+                    <h3>Velocidad promedio</h3>
+                    <p id="stat-average-velocity">13.8 km/s</p>
+                    <span>Velocidad relativa</span>
+                </article>
+                <article class="stat-card">
+                    <h3>Última actualización</h3>
+                    <p id="stat-last-update">4/10/2025, 11:02:37 a. m.</p>
+                    <span>Datos simulados</span>
+                </article>
+            </div>
+        </section>
+
+        <!-- Panel de mitigación / Mitigation panel -->
         <div class="mitigation-panel" id="mitigation-panel" style="display: none;">
             <h3>Métodos de Mitigación</h3>
             <div class="mitigation-options">
@@ -133,19 +168,19 @@
                     <p>Enviar una nave espacial para impactar y desviar el meteorito</p>
                     <button class="btn-mitigation" data-method="kinetic">Aplicar</button>
                 </div>
-                
+
                 <div class="mitigation-card">
                     <h4>Gravedad Artificial</h4>
                     <p>Usar una nave masiva para desviar el meteorito con su gravedad</p>
                     <button class="btn-mitigation" data-method="gravity">Aplicar</button>
                 </div>
-                
+
                 <div class="mitigation-card">
                     <h4>Láser Ablativo</h4>
                     <p>Usar láseres para vaporizar material y cambiar la trayectoria</p>
                     <button class="btn-mitigation" data-method="laser">Aplicar</button>
                 </div>
-                
+
                 <div class="mitigation-card">
                     <h4>Refugios Subterráneos</h4>
                     <p>Construir refugios para proteger a la población</p>
@@ -154,16 +189,15 @@
             </div>
         </div>
 
-        <!-- Alertas de Meteoritos Cercanos -->
+        <!-- Alertas de meteoritos cercanos / Hazard alerts -->
         <div class="alerts-panel">
-            <h3>Alertas de Meteoritos Cercanos</h3>
-            <div id="near-earth-objects" class="neo-list">
-                <p>Cargando datos de la NASA...</p>
-            </div>
+            <h3>🚨 Alertas de Peligro</h3>
+            <div id="hazard-alerts" class="neo-list" aria-live="polite"></div>
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-sA+4J08J+S6Rj0vPgrO+n7aK+JfysDmN6zE2d0C0Peg=" crossorigin=""></script>
     <script src="js/earth-map-2d.js"></script>
     <script src="js/simulation.js"></script>
     <script src="js/calculations.js"></script>

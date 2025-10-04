@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Servidor Flask para integrar la simulación 2D con la aplicación web
+Servidor Flask para integrar la simulación 2D con la aplicación web / Flask server integrating the 2D simulation with the web application.
 """
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
@@ -13,9 +13,9 @@ import time
 
 app = Flask(__name__)
 
-# Configuración
+# Configuración / Configuration.
 PYGAME_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), 'meteor_impact_2d.py')
-# Guardar archivo de datos en el directorio del proyecto
+# Guardar archivo de datos en el directorio del proyecto / Save data file in the project directory.
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SIMULATION_DATA_FILE = os.path.join(PROJECT_DIR, 'simulation_data.json')
 
@@ -27,16 +27,16 @@ class SimulationManager:
     def start_simulation(self, data):
         """Iniciar simulación 2D con datos específicos"""
         try:
-            # Guardar datos en archivo JSON
+            # Guardar datos en archivo JSON / Save data to JSON file.
             with open(SIMULATION_DATA_FILE, 'w') as f:
                 json.dump(data, f)
             
-            # Terminar simulación anterior si existe
+            # Terminar simulación anterior si existe / Terminate previous simulation if it exists.
             if self.current_process:
                 self.current_process.terminate()
                 self.current_process.wait()
             
-            # Iniciar nueva simulación
+            # Iniciar nueva simulación / Start new simulation.
             self.current_process = subprocess.Popen([
                 'python', PYGAME_SCRIPT_PATH,
                 '--data-file', SIMULATION_DATA_FILE
@@ -62,20 +62,20 @@ class SimulationManager:
             return self.current_process.poll() is None
         return False
 
-# Instancia global del administrador de simulación
+# Instancia global del administrador de simulación / Global simulation manager instance.
 sim_manager = SimulationManager()
 
 @app.route('/')
 def index():
     """Página principal"""
-    # Obtener el directorio padre (donde están los archivos HTML/CSS/JS)
+    # Obtener el directorio padre (donde están los archivos HTML/CSS/JS) / Get the directory containing HTML/CSS/JS files.
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return send_from_directory(parent_dir, 'index.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
     """Servir archivos estáticos"""
-    # Obtener el directorio padre (donde están los archivos HTML/CSS/JS)
+    # Obtener el directorio padre (donde están los archivos HTML/CSS/JS) / Get the directory containing HTML/CSS/JS files.
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return send_from_directory(parent_dir, filename)
 
@@ -88,13 +88,13 @@ def start_simulation():
         if not data:
             return jsonify({'error': 'No se proporcionaron datos'}), 400
         
-        # Validar datos requeridos
+        # Validar datos requeridos / Validate required data.
         required_fields = ['effects']
         for field in required_fields:
             if field not in data:
                 return jsonify({'error': f'Campo requerido faltante: {field}'}), 400
         
-        # Iniciar simulación
+        # Iniciar simulación / Start simulation.
         success = sim_manager.start_simulation(data)
         
         if success:
@@ -138,12 +138,12 @@ def get_nasa_data():
     try:
         import requests
         
-        # Parámetros de la consulta
+        # Parámetros de la consulta / Query parameters.
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         api_key = request.args.get('api_key', 'DEMO_KEY')
         
-        # Construir URL
+        # Construir URL / Build URL.
         url = f"https://api.nasa.gov/neo/rest/v1/feed"
         params = {
             'api_key': api_key
@@ -154,7 +154,7 @@ def get_nasa_data():
         if end_date:
             params['end_date'] = end_date
         
-        # Realizar consulta
+        # Realizar consulta / Perform request.
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         
@@ -173,7 +173,7 @@ def geocoding():
         if not query:
             return jsonify({'error': 'Parámetro q requerido'}), 400
         
-        # Usar OpenStreetMap Nominatim
+        # Usar OpenStreetMap Nominatim / Use OpenStreetMap Nominatim.
         url = "https://nominatim.openstreetmap.org/search"
         params = {
             'format': 'json',
@@ -195,18 +195,18 @@ def calculate_impact():
     try:
         data = request.get_json()
         
-        # Validar datos de entrada
+        # Validar datos de entrada / Validate input data.
         required_fields = ['diameter', 'velocity', 'density']
         for field in required_fields:
             if field not in data:
                 return jsonify({'error': f'Campo requerido faltante: {field}'}), 400
         
-        # Simular cálculos (en una implementación real, usarías las funciones de JavaScript)
+        # Simular cálculos (en una implementación real, usarías las funciones de JavaScript) / Simulate calculations (in a real implementation, JavaScript functions would be used).
         diameter = float(data['diameter'])
         velocity = float(data['velocity'])
         density = data['density']
         
-        # Cálculos simplificados
+        # Cálculos simplificados / Simplified calculations.
         density_values = {
             'iron': 7.8,
             'stone': 3.0,
@@ -221,18 +221,18 @@ def calculate_impact():
         energy_joules = 0.5 * mass * (velocity_ms ** 2)
         energy_megatons = energy_joules / (4.184e15)
         
-        # Calcular efectos
+        # Calcular efectos / Calculate effects.
         crater_diameter = (energy_megatons ** 0.294) * 800
         total_destruction_zone = (energy_megatons ** 0.33) * 2.5
         severe_destruction_zone = (energy_megatons ** 0.33) * 5
         moderate_destruction_zone = (energy_megatons ** 0.33) * 10
         
-        # Estimar víctimas (simplificado)
+        # Estimar víctimas (simplificado) / Estimate casualties (simplified).
         population_density = data.get('population_density', 1000)
         fatalities = int(total_destruction_zone * total_destruction_zone * 3.14159 * population_density * 0.5)
         injuries = int(fatalities * 3)
         
-        # Efectos secundarios
+        # Efectos secundarios / Secondary effects.
         earthquake_magnitude = max(0, (energy_megatons ** 0.5) * 2)
         tsunami_height = max(1, (energy_megatons ** 0.4) * 20)
         fire_radius = max(1, (energy_megatons ** 0.33) * 3)

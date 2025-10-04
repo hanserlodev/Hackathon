@@ -1,254 +1,244 @@
-// Cálculos de impacto de meteoritos
+// Cálculos de impacto de meteoritos / Meteor impact calculations.
 class ImpactCalculations {
     constructor() {
+        // Densidades de materiales en g/cm³ / Material densities in g/cm³.
         this.densityValues = {
-            iron: 7.8,    // g/cm³
-            stone: 3.0,   // g/cm³
-            ice: 0.9,      // g/cm³
-            gold: 19.3,    // g/cm³
-            comet: 0.0001,  // g/cm³
-            carbon: 2.2,  // g/cm³
+            iron: 7.8,
+            stone: 3.0,
+            ice: 0.9,
+            gold: 19.3,
+            comet: 0.0001,
+            carbon: 2.2,
+        };
+
+        // Multiplicadores de diámetro de cráter / Crater diameter multipliers.
+        this.craterMultipliers = {
+            iron: 1000,
+            stone: 800,
+            ice: 600,
+            default: 700,
         };
     }
-    
-    // Calcular masa del meteorito
+
+    // Calcular masa del meteorito / Compute meteor mass.
     calculateMass(diameter, density) {
-        const radius = diameter / 2; // metros
-        const volume = (4/3) * Math.PI * Math.pow(radius, 3); // m³
-        const mass = volume * density * 1000; // kg (convertir g/cm³ a kg/m³)
+        const radius = diameter / 2; // metros / meters.
+        const volume = (4 / 3) * Math.PI * Math.pow(radius, 3); // m³ / Cubic meters.
+        const mass = volume * density * 1000; // kg (convertir g/cm³ a kg/m³) / kg (convert g/cm³ to kg/m³).
         return mass;
     }
-    
-    // Calcular energía cinética
+
+    // Calcular energía cinética / Compute kinetic energy.
     calculateKineticEnergy(mass, velocity) {
-        // E = 0.5 * m * v²
-        const velocityMs = velocity * 1000; // convertir km/s a m/s
-        const energyJoules = 0.5 * mass * Math.pow(velocityMs, 2);
-        return energyJoules;
+        const velocityMs = velocity * 1000; // Convertir km/s a m/s / Convert km/s to m/s.
+        return 0.5 * mass * Math.pow(velocityMs, 2);
     }
-    
-    // Convertir energía a megatones de TNT
+
+    // Convertir energía a megatones de TNT / Convert energy to megatons of TNT.
     joulesToMegatons(joules) {
-        const megatonsTNT = joules / (4.184e15); // 1 megatón TNT = 4.184e15 J
-        return megatonsTNT;
+        return joules / 4.184e15; // 1 megatón TNT = 4.184e15 J / 1 megaton TNT equals 4.184e15 J.
     }
-    
-    // Calcular diámetro del cráter
-    calculateCraterDiameter(energy, density) {
-        // Fórmula simplificada basada en estudios de impacto
-        const energyMegatons = this.joulesToMegatons(energy);
-        let craterDiameter;
-        
-        if (density === 'iron') {
-            craterDiameter = Math.pow(energyMegatons, 0.294) * 1000; // metros
-        } else if (density === 'stone') {
-            craterDiameter = Math.pow(energyMegatons, 0.294) * 800; // metros
-        } else { // ice
-            craterDiameter = Math.pow(energyMegatons, 0.294) * 600; // metros
-        }
-        
-        return Math.max(craterDiameter, 10); // mínimo 10 metros
+
+    // Convertir a megatones reutilizando cálculos previos / Normalize to megatons reusing cached values.
+    normalizeMegatons(energyJoules, precomputedMegatons = null) {
+        return typeof precomputedMegatons === 'number'
+            ? precomputedMegatons
+            : this.joulesToMegatons(energyJoules);
     }
-    
-    // Calcular zona de destrucción total
-    calculateTotalDestructionZone(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        const radiusKm = Math.pow(energyMegatons, 0.33) * 2.5; // km
-        return radiusKm;
+
+    // Calcular diámetro del cráter / Calculate crater diameter.
+    calculateCraterDiameter(energyJoules, densityKey, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        const multiplier = this.craterMultipliers[densityKey] ?? this.craterMultipliers.default;
+        return Math.max(Math.pow(megatons, 0.294) * multiplier, 10);
     }
-    
-    // Calcular zona de destrucción severa
-    calculateSevereDestructionZone(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        const radiusKm = Math.pow(energyMegatons, 0.33) * 5; // km
-        return radiusKm;
+
+    // Calcular zona de destrucción total / Calculate total destruction radius.
+    calculateTotalDestructionZone(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        return Math.pow(megatons, 0.33) * 2.5; // km / Kilometers.
     }
-    
-    // Calcular zona de destrucción moderada
-    calculateModerateDestructionZone(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        const radiusKm = Math.pow(energyMegatons, 0.33) * 10; // km
-        return radiusKm;
+
+    // Calcular zona de destrucción severa / Calculate severe destruction radius.
+    calculateSevereDestructionZone(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        return Math.pow(megatons, 0.33) * 5; // km / Kilometers.
     }
-    
-    // Estimar víctimas basado en densidad de población y zona de impacto
-    estimateCasualties(energy, populationDensity, impactZone) {
-        const totalDestructionRadius = this.calculateTotalDestructionZone(energy);
-        const severeDestructionRadius = this.calculateSevereDestructionZone(energy);
-        const moderateDestructionRadius = this.calculateModerateDestructionZone(energy);
-        
-        // Calcular áreas
+
+    // Calcular zona de destrucción moderada / Calculate moderate destruction radius.
+    calculateModerateDestructionZone(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        return Math.pow(megatons, 0.33) * 10; // km / Kilometers.
+    }
+
+    // Estimar víctimas basadas en la zona de impacto / Estimate casualties from impact zones.
+    estimateCasualties(energyJoules, populationDensity, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        const totalDestructionRadius = this.calculateTotalDestructionZone(energyJoules, megatons);
+        const severeDestructionRadius = this.calculateSevereDestructionZone(energyJoules, megatons);
+        const moderateDestructionRadius = this.calculateModerateDestructionZone(energyJoules, megatons);
+
         const totalDestructionArea = Math.PI * Math.pow(totalDestructionRadius, 2);
         const severeDestructionArea = Math.PI * Math.pow(severeDestructionRadius, 2);
         const moderateDestructionArea = Math.PI * Math.pow(moderateDestructionRadius, 2);
-        
-        // Estimar víctimas por zona
-        const fatalitiesTotal = totalDestructionArea * populationDensity * 0.95; // 95% fatalidad
-        const fatalitiesSevere = (severeDestructionArea - totalDestructionArea) * populationDensity * 0.5; // 50% fatalidad
-        const fatalitiesModerate = (moderateDestructionArea - severeDestructionArea) * populationDensity * 0.1; // 10% fatalidad
-        
+
+        const fatalitiesTotal = totalDestructionArea * populationDensity * 0.95;
+        const fatalitiesSevere = (severeDestructionArea - totalDestructionArea) * populationDensity * 0.5;
+        const fatalitiesModerate = (moderateDestructionArea - severeDestructionArea) * populationDensity * 0.1;
+
         const totalFatalities = fatalitiesTotal + fatalitiesSevere + fatalitiesModerate;
-        
-        // Estimar heridos (aproximadamente 3 veces las fatalidades)
         const injuries = totalFatalities * 3;
-        
+
         return {
             fatalities: Math.round(totalFatalities),
             injuries: Math.round(injuries),
-            totalAffected: Math.round(totalFatalities + injuries)
+            totalAffected: Math.round(totalFatalities + injuries),
         };
     }
-    
-    // Calcular magnitud del terremoto
-    calculateEarthquakeMagnitude(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        // Fórmula aproximada para convertir energía de impacto a magnitud sísmica
-        const magnitude = Math.log10(energyMegatons * 4.184e15) / 1.5 - 4.5;
-        return Math.max(magnitude, 0); // mínimo magnitud 0
+
+    // Calcular magnitud del terremoto / Estimate earthquake magnitude.
+    calculateEarthquakeMagnitude(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        const magnitude = Math.log10(megatons * 4.184e15) / 1.5 - 4.5;
+        return Math.max(magnitude, 0);
     }
-    
-    // Calcular altura del tsunami (si el impacto es en el océano)
-    calculateTsunamiHeight(energy, waterDepth = 4000) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        
-        // Fórmula simplificada para altura de tsunami
+
+    // Calcular altura del tsunami / Estimate tsunami height.
+    calculateTsunamiHeight(energyJoules, energyMegatons = null, waterDepth = 4000) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
         let tsunamiHeight;
-        
-        if (energyMegatons < 1) {
-            tsunamiHeight = Math.pow(energyMegatons, 0.5) * 10; // metros
-        } else if (energyMegatons < 100) {
-            tsunamiHeight = Math.pow(energyMegatons, 0.4) * 20; // metros
+
+        if (megatons < 1) {
+            tsunamiHeight = Math.pow(megatons, 0.5) * 10;
+        } else if (megatons < 100) {
+            tsunamiHeight = Math.pow(megatons, 0.4) * 20;
         } else {
-            tsunamiHeight = Math.pow(energyMegatons, 0.3) * 50; // metros
+            tsunamiHeight = Math.pow(megatons, 0.3) * 50;
         }
-        
-        return Math.max(tsunamiHeight, 1); // mínimo 1 metro
+
+        return Math.max(tsunamiHeight, 1);
     }
-    
-    // Calcular radio de incendios
-    calculateFireRadius(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        const fireRadiusKm = Math.pow(energyMegatons, 0.33) * 3; // km
-        return Math.max(fireRadiusKm, 1); // mínimo 1 km
+
+    // Calcular radio de incendios / Calculate fire radius.
+    calculateFireRadius(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        return Math.max(Math.pow(megatons, 0.33) * 3, 1);
     }
-    
-    // Calcular radio de nube de polvo
-    calculateDustCloudRadius(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        const dustRadiusKm = Math.pow(energyMegatons, 0.33) * 15; // km
-        return Math.max(dustRadiusKm, 5); // mínimo 5 km
+
+    // Calcular radio de nube de polvo / Calculate dust cloud radius.
+    calculateDustCloudRadius(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        return Math.max(Math.pow(megatons, 0.33) * 15, 5);
     }
-    
-    // Calcular efectos climáticos globales
-    calculateGlobalClimateEffects(energy) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        
-        let climateEffects = {
+
+    // Calcular efectos climáticos globales / Estimate global climate effects.
+    calculateGlobalClimateEffects(energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        const climateEffects = {
             temperatureDrop: 0,
             duration: 0,
-            globalImpact: false
+            globalImpact: false,
         };
-        
-        if (energyMegatons > 1000) { // Impacto mayor a 1000 megatones
+
+        if (megatons > 1000) {
             climateEffects.globalImpact = true;
-            climateEffects.temperatureDrop = Math.log10(energyMegatons) * 2; // °C
-            climateEffects.duration = Math.log10(energyMegatons) * 2; // años
-        } else if (energyMegatons > 100) { // Impacto mayor a 100 megatones
-            climateEffects.temperatureDrop = Math.log10(energyMegatons) * 1; // °C
-            climateEffects.duration = Math.log10(energyMegatons) * 1; // años
+            climateEffects.temperatureDrop = Math.log10(megatons) * 2;
+            climateEffects.duration = Math.log10(megatons) * 2;
+        } else if (megatons > 100) {
+            climateEffects.temperatureDrop = Math.log10(megatons) * 1;
+            climateEffects.duration = Math.log10(megatons) * 1;
         }
-        
+
         return climateEffects;
     }
-    
-    // Calcular probabilidad de supervivencia por distancia
-    calculateSurvivalProbability(distance, energy) {
-        const totalDestructionRadius = this.calculateTotalDestructionZone(energy);
-        const severeDestructionRadius = this.calculateSevereDestructionZone(energy);
-        const moderateDestructionRadius = this.calculateModerateDestructionZone(energy);
-        
+
+    // Calcular probabilidad de supervivencia / Compute survival probability by distance.
+    calculateSurvivalProbability(distance, energyJoules, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
+        const totalDestructionRadius = this.calculateTotalDestructionZone(energyJoules, megatons);
+        const severeDestructionRadius = this.calculateSevereDestructionZone(energyJoules, megatons);
+        const moderateDestructionRadius = this.calculateModerateDestructionZone(energyJoules, megatons);
+
         if (distance <= totalDestructionRadius) {
-            return 0.05; // 5% de supervivencia
+            return 0.05;
         } else if (distance <= severeDestructionRadius) {
-            return 0.5; // 50% de supervivencia
+            return 0.5;
         } else if (distance <= moderateDestructionRadius) {
-            return 0.9; // 90% de supervivencia
-        } else {
-            return 0.98; // 98% de supervivencia
+            return 0.9;
         }
+        return 0.98;
     }
-    
-    // Calcular tiempo de llegada de efectos secundarios
-    calculateSecondaryEffectTiming(energy, distance) {
-        const energyMegatons = this.joulesToMegatons(energy);
-        
+
+    // Calcular tiempo de llegada de efectos secundarios / Estimate timing for secondary effects.
+    calculateSecondaryEffectTiming(energyJoules, distance, energyMegatons = null) {
+        const megatons = this.normalizeMegatons(energyJoules, energyMegatons);
         return {
-            earthquake: 0, // inmediato
-            tsunami: distance / 200, // velocidad aproximada de tsunami (200 m/s)
-            fire: Math.sqrt(distance) * 0.1, // propagación de incendios
-            dust: distance / 50, // velocidad del viento (50 m/s)
-            climate: 365 * Math.log10(energyMegatons) // años para efectos climáticos
+            earthquake: 0,
+            tsunami: distance / 200,
+            fire: Math.sqrt(distance) * 0.1,
+            dust: distance / 50,
+            climate: 365 * Math.log10(Math.max(megatons, 1)),
         };
     }
-    
-    // Función principal para calcular todos los efectos
-    calculateAllEffects(diameter, velocity, density, populationDensity = 1000) {
-        const mass = this.calculateMass(diameter, this.densityValues[density]);
+
+    // Función principal para calcular todos los efectos / Main function to compute all effects.
+    calculateAllEffects(diameter, velocity, densityKey, populationDensity = 1000) {
+        const materialDensity = this.densityValues[densityKey] ?? this.densityValues.stone;
+        const mass = this.calculateMass(diameter, materialDensity);
         const energy = this.calculateKineticEnergy(mass, velocity);
         const energyMegatons = this.joulesToMegatons(energy);
-        
+
         return {
-            // Datos básicos
-            mass: mass,
-            energy: energy,
-            energyMegatons: energyMegatons,
-            
-            // Efectos físicos
-            craterDiameter: this.calculateCraterDiameter(energy, density),
-            totalDestructionZone: this.calculateTotalDestructionZone(energy),
-            severeDestructionZone: this.calculateSevereDestructionZone(energy),
-            moderateDestructionZone: this.calculateModerateDestructionZone(energy),
-            
-            // Víctimas
-            casualties: this.estimateCasualties(energy, populationDensity),
-            
-            // Efectos secundarios
+            // Datos básicos / Basic data.
+            mass,
+            energy,
+            energyMegatons,
+
+            // Efectos físicos / Physical effects.
+            craterDiameter: this.calculateCraterDiameter(energy, densityKey, energyMegatons),
+            totalDestructionZone: this.calculateTotalDestructionZone(energy, energyMegatons),
+            severeDestructionZone: this.calculateSevereDestructionZone(energy, energyMegatons),
+            moderateDestructionZone: this.calculateModerateDestructionZone(energy, energyMegatons),
+
+            // Víctimas / Casualty estimates.
+            casualties: this.estimateCasualties(energy, populationDensity, energyMegatons),
+
+            // Efectos secundarios / Secondary effects.
             earthquake: {
-                magnitude: this.calculateEarthquakeMagnitude(energy)
+                magnitude: this.calculateEarthquakeMagnitude(energy, energyMegatons),
             },
             tsunami: {
-                height: this.calculateTsunamiHeight(energy)
+                height: this.calculateTsunamiHeight(energy, energyMegatons),
             },
             fire: {
-                radius: this.calculateFireRadius(energy)
+                radius: this.calculateFireRadius(energy, energyMegatons),
             },
             dust: {
-                radius: this.calculateDustCloudRadius(energy)
+                radius: this.calculateDustCloudRadius(energy, energyMegatons),
             },
-            
-            // Efectos climáticos
-            climate: this.calculateGlobalClimateEffects(energy),
-            
-            // Clasificación del impacto
-            impactClassification: this.classifyImpact(energyMegatons)
+
+            // Efectos climáticos / Climate effects.
+            climate: this.calculateGlobalClimateEffects(energy, energyMegatons),
+
+            // Clasificación del impacto / Impact classification.
+            impactClassification: this.classifyImpact(energyMegatons),
         };
     }
-    
-    // Clasificar el tipo de impacto
+
+    // Clasificar el tipo de impacto / Classify the impact severity.
     classifyImpact(energyMegatons) {
         if (energyMegatons < 0.001) {
-            return { level: 'Local', description: 'Impacto local, daños menores' };
+            return { level: 'Local', description: 'Impacto local, daños menores / Local impact, minor damage.' };
         } else if (energyMegatons < 0.1) {
-            return { level: 'Regional', description: 'Impacto regional, daños significativos' };
+            return { level: 'Regional', description: 'Impacto regional, daños significativos / Regional impact, significant damage.' };
         } else if (energyMegatons < 10) {
-            return { level: 'Continental', description: 'Impacto continental, devastación masiva' };
+            return { level: 'Continental', description: 'Impacto continental, devastación masiva / Continental impact, massive devastation.' };
         } else if (energyMegatons < 1000) {
-            return { level: 'Global', description: 'Impacto global, cambio climático' };
-        } else {
-            return { level: 'Extinción', description: 'Evento de extinción masiva' };
+            return { level: 'Global', description: 'Impacto global, cambio climático / Global impact, climate change.' };
         }
+        return { level: 'Extinción', description: 'Evento de extinción masiva / Mass extinction event.' };
     }
 }
 
-// Exportar para uso global
+// Exportar para uso global / Expose globally.
 window.ImpactCalculations = ImpactCalculations;
