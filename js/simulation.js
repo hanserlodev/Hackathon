@@ -19,11 +19,13 @@ class MeteorSimulation {
         this.init();
     }
 
+
     init() {
         // Configurar escuchas y valores iniciales / Configure listeners and default values.
         this.setupEventListeners();
         this.loadInitialData();
     }
+
 
     setupEventListeners() {
         const sizeSlider = document.getElementById('meteor-size');
