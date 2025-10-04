@@ -1,4 +1,4 @@
-// Integración con el servidor Python para la simulación 2D
+// Integración con el servidor Python para la simulación 2D / Python server integration for the 2D simulation.
 class ServerIntegration {
     constructor() {
         this.serverUrl = 'http://localhost:5000';
@@ -6,7 +6,7 @@ class ServerIntegration {
         this.simulation2DPID = null;
     }
     
-    // Iniciar simulación 2D
+    // Iniciar simulación 2D / Start the 2D simulation.
     async startSimulation2D(simulationData) {
         try {
             const response = await fetch(`${this.serverUrl}/api/simulation/start`, {
@@ -27,7 +27,7 @@ class ServerIntegration {
                 this.simulation2DRunning = true;
                 this.simulation2DPID = result.pid;
                 
-                // Mostrar notificación
+                // Mostrar notificación / Display notification.
                 this.showNotification('Simulación 2D iniciada correctamente', 'success');
                 
                 return true;
@@ -42,7 +42,7 @@ class ServerIntegration {
         }
     }
     
-    // Detener simulación 2D
+    // Detener simulación 2D / Stop the 2D simulation.
     async stopSimulation2D() {
         try {
             const response = await fetch(`${this.serverUrl}/api/simulation/stop`, {
@@ -72,7 +72,7 @@ class ServerIntegration {
         }
     }
     
-    // Verificar estado de la simulación 2D
+    // Verificar estado de la simulación 2D / Check 2D simulation status.
     async checkSimulationStatus() {
         try {
             const response = await fetch(`${this.serverUrl}/api/simulation/status`);
@@ -93,7 +93,7 @@ class ServerIntegration {
         }
     }
     
-    // Obtener datos de la NASA a través del servidor
+    // Obtener datos de la NASA a través del servidor / Retrieve NASA data via the server.
     async getNASAData(startDate = null, endDate = null) {
         try {
             const params = new URLSearchParams();
@@ -115,7 +115,7 @@ class ServerIntegration {
         }
     }
     
-    // Geocoding a través del servidor
+    // Geocoding a través del servidor / Perform geocoding through the server.
     async geocodeLocation(locationName) {
         try {
             const params = new URLSearchParams();
@@ -145,7 +145,7 @@ class ServerIntegration {
         }
     }
     
-    // Calcular impacto a través del servidor
+    // Calcular impacto a través del servidor / Calculate impact metrics via the server.
     async calculateImpact(diameter, velocity, density, populationDensity = 1000) {
         try {
             const response = await fetch(`${this.serverUrl}/api/impact/calculate`, {
@@ -173,7 +173,7 @@ class ServerIntegration {
         }
     }
     
-    // Verificar conectividad con el servidor
+    // Verificar conectividad con el servidor / Check server connectivity.
     async checkServerConnection() {
         try {
             const response = await fetch(`${this.serverUrl}/api/simulation/status`, {
@@ -189,7 +189,7 @@ class ServerIntegration {
         }
     }
     
-    // Mostrar notificación
+    // Mostrar notificación / Render notification element.
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -201,7 +201,7 @@ class ServerIntegration {
             </div>
         `;
         
-        // Agregar estilos si no existen
+        // Agregar estilos si no existen / Inject styles if they do not exist.
         if (!document.getElementById('notification-styles')) {
             const styles = document.createElement('style');
             styles.id = 'notification-styles';
@@ -271,7 +271,7 @@ class ServerIntegration {
         
         document.body.appendChild(notification);
         
-        // Auto-remover después de 5 segundos
+        // Auto-remover después de 5 segundos / Auto-remove after five seconds.
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
@@ -279,7 +279,7 @@ class ServerIntegration {
         }, 5000);
     }
     
-    // Obtener icono para notificación
+    // Obtener icono para notificación / Retrieve notification icon.
     getNotificationIcon(type) {
         const icons = {
             success: '✅',
@@ -290,15 +290,15 @@ class ServerIntegration {
         return icons[type] || 'ℹ️';
     }
     
-    // Inicializar integración
+    // Inicializar integración / Initialize integration.
     async init() {
-        // Verificar conectividad
+        // Verificar conectividad / Check connectivity.
         const isConnected = await this.checkServerConnection();
         
         if (isConnected) {
             this.showNotification('Conectado al servidor Python', 'success');
             
-            // Verificar estado de simulación existente
+            // Verificar estado de simulación existente / Check if an existing simulation is running.
             const status = await this.checkSimulationStatus();
             if (status.running) {
                 this.simulation2DRunning = true;
@@ -312,24 +312,25 @@ class ServerIntegration {
     }
 }
 
-// Extender la clase MeteorSimulation para incluir integración 2D
+// Extender la clase MeteorSimulation para incluir integración 2D / Extend MeteorSimulation to include 2D integration.
 class MeteorSimulationWith2D extends MeteorSimulation {
     constructor() {
         super();
         this.serverIntegration = new ServerIntegration();
+        this.nasaAPI = window.nasaAPI || this.nasaAPI;
         this.setup2DIntegration();
     }
     
     async setup2DIntegration() {
-        // Inicializar integración con servidor
+        // Inicializar integración con servidor / Initialize server integration.
         await this.serverIntegration.init();
         
-        // Agregar botón para simulación 2D
+        // Agregar botón para simulación 2D / Add button for 2D simulation.
         this.add2DControls();
     }
     
     add2DControls() {
-        // Agregar botón para iniciar simulación 2D
+        // Agregar botón para iniciar simulación 2D / Add button to start 2D simulation.
         const simulationControls = document.querySelector('.simulation-controls');
         
         const button2D = document.createElement('button');
@@ -354,18 +355,18 @@ class MeteorSimulationWith2D extends MeteorSimulation {
             return;
         }
         
-        // Preparar datos para la simulación 2D
+        // Preparar datos para la simulación 2D / Prepare data for the 2D simulation.
         const simulationData = {
             effects: this.currentSimulation.effects,
             parameters: this.currentSimulation.parameters,
             coordinates: this.currentSimulation.coordinates
         };
         
-        // Iniciar simulación 2D
+        // Iniciar simulación 2D / Start the 2D simulation.
         const success = await this.serverIntegration.startSimulation2D(simulationData);
         
         if (success) {
-            // Actualizar botón
+            // Actualizar botón / Update button state.
             const button2D = document.getElementById('start-2d-simulation');
             button2D.textContent = 'Detener Vista 2D';
             button2D.onclick = () => this.stop2DSimulation();
@@ -376,24 +377,24 @@ class MeteorSimulationWith2D extends MeteorSimulation {
         const success = await this.serverIntegration.stopSimulation2D();
         
         if (success) {
-            // Actualizar botón
+            // Actualizar botón / Update button state.
             const button2D = document.getElementById('start-2d-simulation');
             button2D.textContent = 'Vista 2D';
             button2D.onclick = () => this.start2DSimulation();
         }
     }
     
-    // Sobrescribir método de búsqueda de ubicación para usar servidor
+    // Sobrescribir método de búsqueda de ubicación para usar servidor / Override geocoding to use the server.
     async geocodeLocation(locationName) {
         try {
             return await this.serverIntegration.geocodeLocation(locationName);
         } catch (error) {
-            // Fallback al método original si el servidor no está disponible
+            // Fallback al método original si el servidor no está disponible / Fall back to original method if server is unavailable.
             return await super.geocodeLocation(locationName);
         }
     }
     
-    // Sobrescribir método de carga de datos de la NASA
+    // Sobrescribir método de carga de datos de la NASA / Override NASA data loading method.
     async loadNearEarthObjects() {
         try {
             const data = await this.serverIntegration.getNASAData();
@@ -402,11 +403,11 @@ class MeteorSimulationWith2D extends MeteorSimulation {
             this.nasaAPI.displayHazardAlerts();
         } catch (error) {
             console.error('Error al cargar datos de la NASA:', error);
-            // Continuar sin datos de la NASA
+            // Continuar sin datos de la NASA / Continue without NASA data.
         }
     }
 }
 
-// Exportar para uso global
+// Exportar para uso global / Expose globally.
 window.ServerIntegration = ServerIntegration;
 window.MeteorSimulationWith2D = MeteorSimulationWith2D;

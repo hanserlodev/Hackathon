@@ -1,70 +1,67 @@
-// Simulación principal del impacto de meteoritos
+// Simulación principal del impacto de meteoritos / Main meteor impact simulation controller.
 class MeteorSimulation {
     constructor() {
-        this.earth3D = null;
         this.calculations = null;
+        this.nasaAPI = null;
         this.isSimulating = false;
         this.currentSimulation = null;
-        
+        this.domCache = new Map();
+
         this.init();
     }
-    
+
     init() {
-        // Inicializar componentes
+        // Inicializar componentes / Initialize core components.
         this.earthMap2D = new EarthMap2D();
         this.calculations = new ImpactCalculations();
-        
-        // Configurar event listeners
+
+        // Configurar escuchas de eventos / Configure event listeners.
         this.setupEventListeners();
-        
-        // Cargar datos iniciales
+
+        // Cargar datos iniciales / Load default data.
         this.loadInitialData();
     }
-    
+
     setupEventListeners() {
-        // Botón de búsqueda de ubicación
-        document.getElementById('search-location').addEventListener('click', () => {
+        // Botón de búsqueda de ubicación / Location search button.
+        this.getElement('search-location')?.addEventListener('click', () => {
             this.searchLocation();
         });
-        
-        // Enter en el campo de ubicación
-        document.getElementById('location-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+
+        // Enter en el campo de ubicación / Trigger search on Enter key.
+        this.getElement('location-input')?.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
                 this.searchLocation();
             }
         });
-        
-        // Controles de parámetros del meteorito
-        document.getElementById('meteor-size').addEventListener('input', (e) => {
-            document.getElementById('size-value').textContent = e.target.value + 'm';
-        });
-        
-        document.getElementById('meteor-speed').addEventListener('input', (e) => {
-            document.getElementById('speed-value').textContent = e.target.value + ' km/s';
-        });
-        
-        // Botones de simulación
-        document.getElementById('start-simulation').addEventListener('click', () => {
+
+        // Controles de parámetros del meteorito / Meteor parameter controls.
+        this.syncRangeWithLabel('meteor-size', 'size-value', 'm');
+        this.syncRangeWithLabel('meteor-speed', 'speed-value', ' km/s');
+
+        // Botones de simulación / Simulation control buttons.
+        this.getElement('start-simulation')?.addEventListener('click', () => {
             this.startSimulation();
         });
-        
-        document.getElementById('reset-simulation').addEventListener('click', () => {
+
+        this.getElement('reset-simulation')?.addEventListener('click', () => {
             this.resetSimulation();
         });
-        
-        document.getElementById('mitigation-mode').addEventListener('click', () => {
+
+        this.getElement('mitigation-mode')?.addEventListener('click', () => {
             this.toggleMitigationMode();
         });
     }
     
     async searchLocation() {
-        const input = document.getElementById('location-input').value.trim();
+        const inputElement = this.getElement('location-input');
+        const input = inputElement ? inputElement.value.trim() : '';
         if (!input) return;
         
         try {
             let coordinates;
             
-            // Verificar si son coordenadas directas
+            // Verificar si son coordenadas directas / Check if direct latitude-longitude values.
             if (input.includes(',')) {
                 const parts = input.split(',');
                 coordinates = {
@@ -72,7 +69,7 @@ class MeteorSimulation {
                     lon: parseFloat(parts[1].trim())
                 };
             } else {
-                // Buscar coordenadas usando geocoding
+                // Buscar coordenadas usando geocoding / Resolve coordinates via geocoding service.
                 coordinates = await this.geocodeLocation(input);
             }
             
@@ -89,7 +86,7 @@ class MeteorSimulation {
     }
     
     async geocodeLocation(locationName) {
-        // Usar OpenStreetMap Nominatim API para geocoding
+        // Usar OpenStreetMap Nominatim API para geocoding / Use the OpenStreetMap Nominatim API for geocoding.
         const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`
         );
@@ -112,31 +109,32 @@ class MeteorSimulation {
     }
     
     setImpactLocation(lat, lon) {
-        // Establecer punto de impacto en el mapa 2D
+        // Establecer punto de impacto en el mapa 2D / Set impact point on the 2D map.
         this.earthMap2D.setImpactPoint(lat, lon);
         
-        // Guardar coordenadas para la simulación
+        // Guardar coordenadas para la simulación / Persist coordinates for simulation runs.
         this.impactCoordinates = { lat, lon };
     }
     
     updateLocationDisplay(coordinates) {
-        const locationDisplay = document.getElementById('location-input');
-        if (coordinates.displayName) {
+        const locationDisplay = this.getElement('location-input');
+        if (coordinates.displayName && locationDisplay) {
             locationDisplay.value = coordinates.displayName;
         }
-        
-        // Mostrar coordenadas en la interfaz
+
+        // Mostrar coordenadas en la interfaz / Display coordinates in the UI.
         this.showLocationInfo(coordinates);
     }
-    
+
     showLocationInfo(coordinates) {
-        // Crear o actualizar información de ubicación
-        let locationInfo = document.getElementById('location-info');
+        // Crear o actualizar información de ubicación / Create or update location info panel.
+        let locationInfo = this.getElement('location-info');
         if (!locationInfo) {
             locationInfo = document.createElement('div');
             locationInfo.id = 'location-info';
             locationInfo.className = 'location-info';
             document.querySelector('.control-panel').appendChild(locationInfo);
+            this.domCache.set('location-info', locationInfo);
         }
         
         locationInfo.innerHTML = `
@@ -158,15 +156,15 @@ class MeteorSimulation {
             return;
         }
         
-        // Obtener parámetros del meteorito
-        const diameter = parseFloat(document.getElementById('meteor-size').value);
-        const velocity = parseFloat(document.getElementById('meteor-speed').value);
-        const density = document.getElementById('meteor-density').value;
+        // Obtener parámetros del meteorito / Gather meteor parameters from the UI.
+        const diameter = parseFloat(this.getElement('meteor-size')?.value || '0');
+        const velocity = parseFloat(this.getElement('meteor-speed')?.value || '0');
+        const density = this.getElement('meteor-density')?.value;
         
-        // Calcular efectos del impacto
+        // Calcular efectos del impacto / Compute impact effects.
         const effects = this.calculations.calculateAllEffects(diameter, velocity, density);
         
-        // Guardar simulación actual
+        // Guardar simulación actual / Persist current simulation snapshot.
         this.currentSimulation = {
             coordinates: this.impactCoordinates,
             parameters: { diameter, velocity, density },
@@ -174,42 +172,45 @@ class MeteorSimulation {
             startTime: Date.now()
         };
         
-        // Iniciar simulación visual
+        // Iniciar simulación visual / Start visual simulation.
         this.runVisualSimulation();
         
-        // Mostrar resultados
+        // Mostrar resultados / Present calculated results.
         this.displaySimulationResults(effects);
         
         this.isSimulating = true;
-        document.getElementById('start-simulation').disabled = true;
-        document.getElementById('start-simulation').textContent = 'Simulando...';
+        const startButton = this.getElement('start-simulation');
+        if (startButton) {
+            startButton.disabled = true;
+            startButton.textContent = 'Simulando...';
+        }
     }
     
     runVisualSimulation() {
         const { diameter, velocity } = this.currentSimulation.parameters;
         const { lat, lon } = this.currentSimulation.coordinates;
         
-        // Crear meteorito en el mapa 2D
-        const meteorSize = Math.min(diameter / 1000, 0.2); // Escalar tamaño para visualización
+        // Crear meteorito en el mapa 2D / Render meteor on the 2D map.
+        const meteorSize = Math.min(diameter / 1000, 0.2); // Escalar tamaño para visualización / Scale size for visualization.
         this.earthMap2D.createMeteor(meteorSize);
-        
-        // Animar trayectoria hacia la Tierra
-        const duration = Math.max(2000, velocity * 50); // Duración basada en velocidad
+
+        // Animar trayectoria hacia la Tierra / Animate trajectory towards Earth.
+        const duration = Math.max(2000, velocity * 50); // Duración basada en velocidad / Duration derived from speed.
         this.earthMap2D.animateMeteorToEarth(lat, lon, duration);
-        
-        // Simular efectos en tiempo real
+
+        // Simular efectos en tiempo real / Simulate real-time effects.
         this.simulateRealTimeEffects();
     }
-    
+
     simulateRealTimeEffects() {
         const effects = this.currentSimulation.effects;
         const startTime = Date.now();
-        
+
         const updateEffects = () => {
             const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / 5000, 1); // 5 segundos de simulación
-            
-            // Actualizar efectos progresivamente
+            const progress = Math.min(elapsed / 5000, 1); // 5 segundos de simulación / Five-second simulation window.
+
+            // Actualizar efectos progresivamente / Update effects progressively.
             this.updateEffectDisplay(effects, progress);
             
             if (progress < 1) {
@@ -223,42 +224,28 @@ class MeteorSimulation {
     }
     
     updateEffectDisplay(effects, progress) {
-        // Actualizar datos del impacto
-        document.getElementById('energy-value').textContent = 
-            this.formatEnergy(effects.energyMegatons * progress);
+        // Actualizar datos del impacto / Update core impact metrics.
+        this.setText('energy-value', this.formatEnergy(effects.energyMegatons * progress));
+        this.setText('crater-diameter', this.formatDistance(effects.craterDiameter * progress));
+        this.setText('casualties', Math.round(effects.casualties.fatalities * progress).toLocaleString());
+        this.setText('destruction-zone', this.formatDistance(effects.totalDestructionZone * progress));
+
+        // Actualizar efectos secundarios / Update secondary effect indicators.
+        this.setText('earthquake-magnitude', `Magnitud: ${(effects.earthquake.magnitude * progress).toFixed(1)}`);
+        this.setText('tsunami-height', `Altura: ${(effects.tsunami.height * progress).toFixed(1)}m`);
+        this.setText('fire-radius', `Radio: ${this.formatDistance(effects.fire.radius * progress)}`);
+        this.setText('dust-radius', `Radio: ${this.formatDistance(effects.dust.radius * progress)}`);
         
-        document.getElementById('crater-diameter').textContent = 
-            this.formatDistance(effects.craterDiameter * progress);
-        
-        document.getElementById('casualties').textContent = 
-            Math.round(effects.casualties.fatalities * progress).toLocaleString();
-        
-        document.getElementById('destruction-zone').textContent = 
-            this.formatDistance(effects.totalDestructionZone * progress);
-        
-        // Actualizar efectos secundarios
-        document.getElementById('earthquake-magnitude').textContent = 
-            `Magnitud: ${(effects.earthquake.magnitude * progress).toFixed(1)}`;
-        
-        document.getElementById('tsunami-height').textContent = 
-            `Altura: ${(effects.tsunami.height * progress).toFixed(1)}m`;
-        
-        document.getElementById('fire-radius').textContent = 
-            `Radio: ${this.formatDistance(effects.fire.radius * progress)}`;
-        
-        document.getElementById('dust-radius').textContent = 
-            `Radio: ${this.formatDistance(effects.dust.radius * progress)}`;
-        
-        // Agregar efectos visuales
+        // Agregar efectos visuales / Add visual feedback.
         this.addVisualEffects(progress);
     }
-    
+
     addVisualEffects(progress) {
-        // Efectos de pantalla basados en la magnitud del impacto
+        // Efectos de pantalla basados en la magnitud del impacto / Screen effects based on impact magnitude.
         const energyMegatons = this.currentSimulation.effects.energyMegatons;
-        
+
         if (energyMegatons > 10) {
-            // Efecto de temblor para impactos grandes
+            // Efecto de temblor para impactos grandes / Screen shake for large impacts.
             if (progress > 0.8) {
                 document.body.classList.add('shake');
                 setTimeout(() => {
@@ -266,9 +253,9 @@ class MeteorSimulation {
                 }, 500);
             }
         }
-        
+
         if (energyMegatons > 100) {
-            // Efecto de pulso para impactos muy grandes
+            // Efecto de pulso para impactos muy grandes / Pulse effect for extreme impacts.
             if (progress > 0.9) {
                 document.body.classList.add('pulse');
                 setTimeout(() => {
@@ -279,25 +266,26 @@ class MeteorSimulation {
     }
     
     displaySimulationResults(effects) {
-        // Mostrar clasificación del impacto
+        // Mostrar clasificación del impacto / Display impact classification.
         this.showImpactClassification(effects.impactClassification);
-        
-        // Mostrar efectos climáticos si aplican
+
+        // Mostrar efectos climáticos si aplican / Display climate effects when applicable.
         if (effects.climate.globalImpact) {
             this.showClimateEffects(effects.climate);
         }
-        
-        // Mostrar recomendaciones de mitigación
+
+        // Mostrar recomendaciones de mitigación / Display mitigation recommendations.
         this.showMitigationRecommendations(effects);
     }
     
     showImpactClassification(classification) {
-        let classificationDiv = document.getElementById('impact-classification');
+        let classificationDiv = this.getElement('impact-classification');
         if (!classificationDiv) {
             classificationDiv = document.createElement('div');
             classificationDiv.id = 'impact-classification';
             classificationDiv.className = 'impact-classification';
             document.querySelector('.main-content').appendChild(classificationDiv);
+            this.domCache.set('impact-classification', classificationDiv);
         }
         
         const levelColors = {
@@ -318,12 +306,13 @@ class MeteorSimulation {
     }
     
     showClimateEffects(climate) {
-        let climateDiv = document.getElementById('climate-effects');
+        let climateDiv = this.getElement('climate-effects');
         if (!climateDiv) {
             climateDiv = document.createElement('div');
             climateDiv.id = 'climate-effects';
             climateDiv.className = 'climate-effects';
             document.querySelector('.main-content').appendChild(climateDiv);
+            this.domCache.set('climate-effects', climateDiv);
         }
         
         climateDiv.innerHTML = `
@@ -337,10 +326,10 @@ class MeteorSimulation {
     }
     
     showMitigationRecommendations(effects) {
-        const panel = document.getElementById('mitigation-panel');
+        const panel = this.getElement('mitigation-panel');
         panel.style.display = 'block';
         
-        // Habilitar métodos de mitigación apropiados
+        // Habilitar métodos de mitigación apropiados / Enable suitable mitigation methods.
         this.enableMitigationMethods(effects);
     }
     
@@ -362,7 +351,7 @@ class MeteorSimulation {
                     enabled = effects.energyMegatons < 10;
                     break;
                 case 'shelters':
-                    enabled = true; // Siempre disponible
+                    enabled = true; // Siempre disponible / Always available.
                     break;
             }
             
@@ -373,17 +362,20 @@ class MeteorSimulation {
     
     completeSimulation() {
         this.isSimulating = false;
-        document.getElementById('start-simulation').disabled = false;
-        document.getElementById('start-simulation').textContent = 'Iniciar Simulación';
+        const startButton = this.getElement('start-simulation');
+        if (startButton) {
+            startButton.disabled = false;
+            startButton.textContent = 'Iniciar Simulación';
+        }
         
-        // Mostrar resumen final
+        // Mostrar resumen final / Present final summary.
         this.showSimulationSummary();
     }
-    
+
     showSimulationSummary() {
         const effects = this.currentSimulation.effects;
-        
-        // Crear resumen
+
+        // Crear resumen / Build summary markup.
         const summary = `
             <div class="simulation-summary">
                 <h3>📊 Resumen de la Simulación</h3>
@@ -408,13 +400,14 @@ class MeteorSimulation {
             </div>
         `;
         
-        // Insertar resumen
+        // Insertar resumen / Insert summary into the layout.
         const container = document.querySelector('.main-content');
-        let summaryDiv = document.getElementById('simulation-summary');
+        let summaryDiv = this.getElement('simulation-summary');
         if (!summaryDiv) {
             summaryDiv = document.createElement('div');
             summaryDiv.id = 'simulation-summary';
             container.appendChild(summaryDiv);
+            this.domCache.set('simulation-summary', summaryDiv);
         }
         summaryDiv.innerHTML = summary;
     }
@@ -423,54 +416,65 @@ class MeteorSimulation {
         this.isSimulating = false;
         this.currentSimulation = null;
         
-        // Limpiar visualización 2D
+        // Limpiar visualización 2D / Reset 2D visualization state.
         if (this.earthMap2D) {
             this.earthMap2D.impactZones = [];
             this.earthMap2D.meteorTrail = [];
             this.earthMap2D.mitigationEffects = [];
         }
-        
-        // Limpiar datos mostrados
+
+        // Limpiar datos mostrados / Clear displayed metrics.
         this.clearDisplayData();
-        
-        // Resetear botones
-        document.getElementById('start-simulation').disabled = false;
-        document.getElementById('start-simulation').textContent = 'Iniciar Simulación';
-        
-        // Ocultar panel de mitigación
-        document.getElementById('mitigation-panel').style.display = 'none';
+
+        // Resetear botones / Reset action buttons.
+        const startButton = this.getElement('start-simulation');
+        if (startButton) {
+            startButton.disabled = false;
+            startButton.textContent = 'Iniciar Simulación';
+        }
+
+        // Ocultar panel de mitigación / Hide mitigation panel.
+        const mitigationPanel = this.getElement('mitigation-panel');
+        if (mitigationPanel) {
+            mitigationPanel.style.display = 'none';
+        }
     }
     
     clearDisplayData() {
-        // Limpiar datos del impacto
-        document.getElementById('energy-value').textContent = '-';
-        document.getElementById('crater-diameter').textContent = '-';
-        document.getElementById('casualties').textContent = '-';
-        document.getElementById('destruction-zone').textContent = '-';
-        
-        // Limpiar efectos secundarios
-        document.getElementById('earthquake-magnitude').textContent = 'Magnitud: -';
-        document.getElementById('tsunami-height').textContent = 'Altura: -';
-        document.getElementById('fire-radius').textContent = 'Radio: -';
-        document.getElementById('dust-radius').textContent = 'Radio: -';
-        
-        // Limpiar elementos adicionales
+        // Limpiar datos del impacto / Reset impact data labels.
+        this.setText('energy-value', '-');
+        this.setText('crater-diameter', '-');
+        this.setText('casualties', '-');
+        this.setText('destruction-zone', '-');
+
+        // Limpiar efectos secundarios / Reset secondary effect labels.
+        this.setText('earthquake-magnitude', 'Magnitud: -');
+        this.setText('tsunami-height', 'Altura: -');
+        this.setText('fire-radius', 'Radio: -');
+        this.setText('dust-radius', 'Radio: -');
+
+        // Limpiar elementos adicionales / Remove auxiliary elements.
         const elementsToRemove = [
             'impact-classification',
             'climate-effects',
             'simulation-summary'
         ];
-        
+
         elementsToRemove.forEach(id => {
-            const element = document.getElementById(id);
+            const element = this.getElement(id);
             if (element) {
                 element.remove();
+                this.domCache.delete(id);
             }
         });
     }
-    
+
     toggleMitigationMode() {
-        const panel = document.getElementById('mitigation-panel');
+        const panel = this.getElement('mitigation-panel');
+        if (!panel) {
+            return;
+        }
+
         const isVisible = panel.style.display !== 'none';
         panel.style.display = isVisible ? 'none' : 'block';
         
@@ -479,7 +483,49 @@ class MeteorSimulation {
         }
     }
     
-    // Funciones de utilidad
+    // Sincronizar controles deslizantes con sus etiquetas / Sync slider controls with display labels.
+    syncRangeWithLabel(rangeId, labelId, suffix) {
+        const range = this.getElement(rangeId);
+        const label = this.getElement(labelId);
+
+        if (!range || !label) {
+            return;
+        }
+
+        const updateLabel = () => {
+            label.textContent = `${range.value}${suffix}`;
+        };
+
+        updateLabel();
+        range.addEventListener('input', updateLabel);
+    }
+
+    // Establecer texto de forma segura / Safely set element text content.
+    setText(id, value) {
+        const element = this.getElement(id);
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
+    // Obtener y cachear elementos del DOM / Retrieve and cache DOM elements.
+    getElement(id) {
+        const cached = this.domCache.get(id);
+        if (cached && document.body.contains(cached)) {
+            return cached;
+        }
+
+        const element = document.getElementById(id);
+        if (element) {
+            this.domCache.set(id, element);
+        } else {
+            this.domCache.delete(id);
+        }
+
+        return element;
+    }
+
+    // Funciones de utilidad / General utility helpers.
     formatEnergy(megatons) {
         if (megatons >= 1000) {
             return `${(megatons / 1000).toFixed(1)} GT`;
@@ -499,13 +545,14 @@ class MeteorSimulation {
     }
     
     showError(message) {
-        // Crear o actualizar mensaje de error
-        let errorDiv = document.getElementById('error-message');
+        // Crear o actualizar mensaje de error / Create or update transient error banner.
+        let errorDiv = this.getElement('error-message');
         if (!errorDiv) {
             errorDiv = document.createElement('div');
             errorDiv.id = 'error-message';
             errorDiv.className = 'error-message';
             document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.control-panel'));
+            this.domCache.set('error-message', errorDiv);
         }
         
         errorDiv.innerHTML = `
@@ -514,17 +561,18 @@ class MeteorSimulation {
                 <button onclick="this.parentElement.parentElement.remove()">×</button>
             </div>
         `;
-        
-        // Auto-remover después de 5 segundos
+
+        // Auto-remover después de 5 segundos / Auto-remove after five seconds.
         setTimeout(() => {
             if (errorDiv.parentElement) {
                 errorDiv.remove();
+                this.domCache.delete('error-message');
             }
         }, 5000);
     }
-    
+
     async loadInitialData() {
-        // Cargar datos de meteoritos cercanos
+        // Cargar datos de meteoritos cercanos / Load nearby meteor data.
         try {
             await this.loadNearEarthObjects();
         } catch (error) {
@@ -533,10 +581,17 @@ class MeteorSimulation {
     }
     
     async loadNearEarthObjects() {
-        // Esta función será implementada en nasa-api.js
-        console.log('Cargando objetos cercanos a la Tierra...');
+        // Integración con la NASA API cuando esté disponible / Integrate with NASA API when available.
+        const api = this.nasaAPI || window.nasaAPI;
+        if (api && typeof api.getNearEarthObjects === 'function') {
+            await api.getNearEarthObjects();
+            api.displayNearEarthObjects?.();
+            api.displayHazardAlerts?.();
+        } else {
+            console.log('Cargando objetos cercanos a la Tierra (modo local) / Loading near-earth objects (local mode).');
+        }
     }
 }
 
-// Exportar para uso global
+// Exportar para uso global / Expose globally.
 window.MeteorSimulation = MeteorSimulation;
