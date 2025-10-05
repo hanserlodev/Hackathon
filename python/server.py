@@ -10,8 +10,12 @@ import subprocess
 import os
 import threading
 import time
+import requests
+from flask_cors import CORS
+from geopy.geocoders import Nominatim
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuración / Configuration.
 PYGAME_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), 'meteor_impact_2d.py')
@@ -132,62 +136,92 @@ def simulation_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/nasa/neo', methods=['GET'])
-def get_nasa_data():
-    """Proxy para datos de la NASA API"""
+
+
+@app.route('/api/overpass', methods=['GET','POST'])
+def get_overpass_data():
+    """Proxy para Overpass API"""
     try:
-        import requests
+        # Obtener parámetros de consulta del frontend
+        lat = (request.args.get('lat'))
+        lon = (request.args.get('lon'))
+        square_size = int(request.args.get('squareSize', 5000))  # Tamaño del área de impacto en metros (ajustable)
+
+        # Validar que las coordenadas sean válidas
+        if not lat or not lon:
+            return jsonify({'error': 'Coordenadas lat/lon son necesarias'}), 400
         
-        # Parámetros de la consulta / Query parameters.
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        api_key = request.args.get('api_key', 'DEMO_KEY')
+        # URL de Overpass API
+        overpass_url = 'https://overpass-api.de/api/interpreter'
         
-        # Construir URL / Build URL.
-        url = f"https://api.nasa.gov/neo/rest/v1/feed"
-        params = {
-            'api_key': api_key
-        }
+        # Consulta Overpass API para obtener edificios, infraestructura y población
+        query = f"""
+            [out:json];
+            (
+              node["building"](around:{lat},{lon},{square_size});
+              way["building"](around:{lat},{lon},{square_size});
+              relation["building"](around:{lat},{lon},{square_size});
+              
+              node["amenity"](around:{lat},{lon},{square_size});
+              way["amenity"](around:{lat},{lon},{square_size});
+              relation["amenity"](around:{lat},{lon},{square_size});
+              
+              node["population"](around:{lat},{lon},{square_size});
+            );
+            out body;
+            >;
+            out skel qt;
+        """
+
+        # Mostrar la consulta en la consola (útil para depuración)
+        print(f"Consulta enviada a Overpass API: {query}")
         
-        if start_date:
-            params['start_date'] = start_date
-        if end_date:
-            params['end_date'] = end_date
-        
-        # Realizar consulta / Perform request.
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        
+        # Realizar la solicitud a Overpass API
+        response = requests.post(overpass_url, data={'data': query})
+        response.raise_for_status()  # Si hay un error, se lanzará una excepción
+
+        # Devolver los datos obtenidos de Overpass API
         return jsonify(response.json())
-        
-    except Exception as e:
+
+    except requests.exceptions.RequestException as e:
+        # Capturar cualquier error de la solicitud (como problemas de red)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/geocoding', methods=['GET'])
 def geocoding():
-    """Proxy para geocoding"""
+    """Proxy para geocoding (Nominatim usando Geopy)"""
     try:
-        import requests
-        
         query = request.args.get('q')
         if not query:
             return jsonify({'error': 'Parámetro q requerido'}), 400
         
-        # Usar OpenStreetMap Nominatim / Use OpenStreetMap Nominatim.
-        url = "https://nominatim.openstreetmap.org/search"
-        params = {
-            'format': 'json',
-            'q': query,
-            'limit': 5
-        }
+        print(f"Realizando solicitud a Nominatim para: {query}")
         
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
+        # Usar Geopy con Nominatim
+        geolocator = Nominatim(user_agent="MeteoriteImpactSimulatorHackathonNASA/1.0 (hanserlodev@gmail.com)")
         
-        return jsonify(response.json())
+        # Obtener la ubicación usando Geopy
+        location = geolocator.reverse(query, language='es', addressdetails=True)
+        
+        if location:
+            address = location.raw.get('address', {})
+            print(f"Ubicación encontrada: {location.address}")
+            
+            # Formar la respuesta
+            location_details = {
+                'address': address,
+                'latitude': location.latitude,
+                'longitude': location.longitude
+            }
+            
+            return jsonify(location_details)
+        else:
+            return jsonify({'error': 'No se encontró la ubicación'}), 404
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error al obtener detalles de la ubicación: {e}")
+        return jsonify({'error': 'Error interno del servidor', 'details': str(e)}), 500
+
 
 @app.route('/api/impact/calculate', methods=['POST'])
 def calculate_impact():
@@ -272,6 +306,9 @@ def calculate_impact():
         return jsonify(result)
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+# (Eliminado: función duplicada de geocoding)
         return jsonify({'error': str(e)}), 500
 
 @app.errorhandler(404)

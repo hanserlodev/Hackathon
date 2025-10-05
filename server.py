@@ -267,6 +267,58 @@ def calculate_impact():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/api/overpass', methods=['POST'])  # Debe aceptar POST, no GET
+def get_overpass_data():
+    """Proxy para Overpass API"""
+    try:
+        import requests  # Importar requests para usarlo en esta función
+        # Obtener parámetros de consulta del frontend
+        lat = request.args.get('lat')
+        lon = request.args.get('lon')
+        square_size = int(request.args.get('squareSize', 5000))  # Tamaño del área de impacto en metros (ajustable)
+
+        # Validar que las coordenadas sean válidas
+        if not lat or not lon:
+            return jsonify({'error': 'Coordenadas lat/lon son necesarias'}), 400
+
+        # URL de Overpass API
+        
+
+        # Consulta Overpass API para obtener edificios, infraestructura y población
+        query = f"""
+            [out:json];
+            (
+              node["building"](around:{lat},{lon},{square_size});
+              way["building"](around:{lat},{lon},{square_size});
+              relation["building"](around:{lat},{lon},{square_size});
+              
+              node["amenity"](around:{lat},{lon},{square_size});
+              way["amenity"](around:{lat},{lon},{square_size});
+              relation["amenity"](around:{lat},{lon},{square_size});
+              
+              node["population"](around:{lat},{lon},{square_size});
+            );
+            out body;
+            >;
+            out skel qt;
+        """
+        overpass_url = "https://overpass-api.de/api/interpreter"
+        # Mostrar la consulta en la consola (útil para depuración)
+        print(f"Consulta enviada a Overpass API: {query}")
+        
+        # Realizar la solicitud a Overpass API
+        response = requests.post(overpass_url, data={'data': query})
+        response.raise_for_status()  # Si hay un error, se lanzará una excepción
+
+        # Devolver los datos obtenidos de Overpass API
+        return jsonify(response.json())
+
+    except requests.exceptions.RequestException as e:
+        # Capturar cualquier error de la solicitud (como problemas de red)
+        return jsonify({'error': str(e)}), 500
+
 
 @app.errorhandler(404)
 def not_found(error):

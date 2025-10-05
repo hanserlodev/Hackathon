@@ -13,6 +13,7 @@ import os
 import argparse
 from datetime import datetime
 
+
 # Importar la clase principal / Import the main class.
 from meteor_impact_2d import MeteorImpact2D
 
