@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Impacto de Meteoritos</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j7kGStGkM9CqzH1J7g7h3lZ8B3zt+Jf2g7uHkLk=" crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Encabezado principal / Main header -->
         <!-- Encabezado principal / Main header -->
         <header class="header">
             <h1>🌍 Simulation of Meteorite Impact</h1>
@@ -17,23 +17,28 @@
         </header>
 
         <!-- Panel de control / Control panel -->
-        <!-- Panel de control / Control panel -->
         <div class="control-panel">
             <div class="input-group">
                 <label for="location-input">Ubicación del Impacto:</label>
                 <input type="text" id="location-input" placeholder="Ej: Denver, CO o 39.7392, -104.9903">
                 <button id="search-location">Buscar</button>
             </div>
-
+            <div id="location-info"></div>
 
             <div class="meteor-params">
+
+                <label for="meteor-select">Seleccionar Meteorito:</label>
+                <select id="meteor-select">
+                    <!-- Los meteoritos se llenarán dinámicamente aquí -->
+                </select>
+
                 <h3>Meteorite Parameters</h3>
+
                 <div class="param-group">
                     <label for="meteor-size">Tamaño (metros):</label>
                     <input type="range" id="meteor-size" min="10" max="1000" value="180">
                     <span id="size-value">180m</span>
                 </div>
-
 
                 <div class="param-group">
                     <label for="meteor-speed">Velocidad (km/s):</label>
@@ -41,9 +46,14 @@
                     <span id="speed-value">24 km/s</span>
                 </div>
 
+                <div class="param-group">
+                    <label for="meteor-angle">Ángulo de Entrada (°):</label>
+                    <input type="range" id="meteor-angle" min="10" max="90" value="45">
+                    <span id="angle-value">45°</span>
+                </div>
 
                 <div class="param-group">
-                    <label for="meteor-density">Density:</label>
+                    <label for="meteor-density">Densidad:</label>
                     <select id="meteor-density">
                         <option value="iron">Hierro (7.8 g/cm³)</option>
                         <option value="stone" selected>Piedra (3.0 g/cm³)</option>
@@ -54,25 +64,25 @@
                     </select>
                 </div>
             </div>
+        </div>
+
 
 
             <div class="simulation-controls">
                 <button id="start-simulation" class="btn-primary">Iniciar Simulación</button>
                 <button id="reset-simulation" class="btn-secondary">Reiniciar</button>
-                <button id="mitigation-mode" class="btn-warning">Modo Mitigación</button>
             </div>
+            
         </div>
 
-        <!-- Contenido principal / Main content -->
         <!-- Contenido principal / Main content -->
         <div class="main-content">
             <div class="visualization-container">
                 <div id="earth-container" class="earth-view">
-                    <div id="earth-map" class="earth-map" role="img" aria-label="Mapa de OpenStreetMap centrado en Estados Unidos continental"></div>
-                    <div id="impact-marker" class="impact-marker" aria-hidden="true"></div>
-                    <div class="map-attribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
+                    <div id="map" style="width: 100%; height: 600px;"></div>
                 </div>
-
+                <div id="impact-marker" class="impact-marker" aria-hidden="true"></div>
+                <div id ="visualization-message" class="visualization-message" aria-live="polite"></div>
 
                 <div class="impact-data" id="impact-data">
                     <h3>Datos del Impacto</h3>
@@ -172,89 +182,57 @@
         </section>
 
         <!-- Panel de mitigación / Mitigation panel -->
-        <!-- Panel de estadísticas / Statistics panel -->
-        <section class="statistics-panel" aria-labelledby="statistics-title">
-            <h2 id="statistics-title">📊 Estadísticas de la Semana</h2>
-            <div class="stats-grid">
-                <article class="stat-card">
-                    <h3>Total de objetos</h3>
-                    <p id="stat-total">121</p>
-                    <span id="stat-hazard-percentage">2.5% peligrosos</span>
-                </article>
-                <article class="stat-card">
-                    <h3>Potencialmente peligrosos</h3>
-                    <p id="stat-hazardous">3</p>
-                    <span>Vigilancia activa</span>
-                </article>
-                <article class="stat-card">
-                    <h3>Tamaño promedio</h3>
-                    <p id="stat-average-size">88 m</p>
-                    <span>Estimación global</span>
-                </article>
-                <article class="stat-card">
-                    <h3>Velocidad promedio</h3>
-                    <p id="stat-average-velocity">13.8 km/s</p>
-                    <span>Velocidad relativa</span>
-                </article>
-                <article class="stat-card">
-                    <h3>Última actualización</h3>
-                    <p id="stat-last-update">4/10/2025, 11:02:37 a. m.</p>
-                    <span>Datos simulados</span>
-                </article>
-            </div>
-        </section>
-
-        <!-- Panel de mitigación / Mitigation panel -->
         <div class="mitigation-panel" id="mitigation-panel" style="display: none;">
             <h3>Métodos de Mitigación</h3>
             <div class="mitigation-options">
                 <div class="mitigation-card">
                     <h4>Desviación por Impacto Cinético</h4>
                     <p>Enviar una nave espacial para impactar y desviar el meteorito</p>
-                    <button class="btn-mitigation" data-method="kinetic">Aplicar</button>
+                    <button class="mitigation-mode" data-method="kinetic">Aplicar</button>
                 </div>
 
 
                 <div class="mitigation-card">
                     <h4>Gravedad Artificial</h4>
                     <p>Usar una nave masiva para desviar el meteorito con su gravedad</p>
-                    <button class="btn-mitigation" data-method="gravity">Aplicar</button>
+                    <button class="mitigation-mode" data-method="gravity">Aplicar</button>
                 </div>
 
 
                 <div class="mitigation-card">
                     <h4>Láser Ablativo</h4>
                     <p>Usar láseres para vaporizar material y cambiar la trayectoria</p>
-                    <button class="btn-mitigation" data-method="laser">Aplicar</button>
+                    <button class="mitigation-mode" data-method="laser">Aplicar</button>
                 </div>
 
 
                 <div class="mitigation-card">
                     <h4>Refugios Subterráneos</h4>
                     <p>Construir refugios para proteger a la población</p>
-                    <button class="btn-mitigation" data-method="shelters">Aplicar</button>
+                    <button class="mitigation-mode" data-method="shelters">Aplicar</button>
                 </div>
             </div>
         </div>
 
         <!-- Alertas de meteoritos cercanos / Hazard alerts -->
-        <!-- Alertas de meteoritos cercanos / Hazard alerts -->
         <div class="alerts-panel">
-            <h3>🚨 Alertas de Peligro</h3>
-            <div id="hazard-alerts" class="neo-list" aria-live="polite"></div>
             <h3>🚨 Alertas de Peligro</h3>
             <div id="hazard-alerts" class="neo-list" aria-live="polite"></div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-sA+4J08J+S6Rj0vPgrO+n7aK+JfysDmN6zE2d0C0Peg=" crossorigin=""></script>
-    <script src="js/earth-map-2d.js"></script>
-    <script src="js/simulation.js"></script>
-    <script src="js/calculations.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> <!-- Leaflet.js se carga primero -->
+    <script src="js/earth-map-2d.js"></script> <!-- Luego, el archivo que usa Leaflet -->
     <script src="js/nasa-api.js"></script>
-    <script src="js/mitigation-fixed.js"></script>
+    <script src="js/simulation.js"></script>
     <script src="js/server-integration.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/overpass.js"></script> <!-- Debe estar antes de main.js -->
+    <script src="js/calculations.js"></script>
+    <script src="js/mitigation-fixed.js"></script>
+    <script src="js/main.js"></script> <!-- Finalmente, carga main.js -->
+
+
 </body>
 </html>

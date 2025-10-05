@@ -16,21 +16,21 @@ def check_dependencies():
     print("🔍 Verificando dependencias...")
     
     try:
-        import flask
+        import flask # type: ignore
         print("✅ Flask instalado")
     except ImportError:
         print("❌ Flask no instalado. Ejecutando: pip install flask")
         subprocess.run([sys.executable, "-m", "pip", "install", "flask"])
     
     try:
-        import pygame
+        import pygame # type: ignore
         print("✅ Pygame instalado")
     except ImportError:
         print("❌ Pygame no instalado. Ejecutando: pip install pygame")
         subprocess.run([sys.executable, "-m", "pip", "install", "pygame"])
     
     try:
-        import requests
+        import requests # type: ignore
         print("✅ Requests instalado")
     except ImportError:
         print("❌ Requests no instalado. Ejecutando: pip install requests")
