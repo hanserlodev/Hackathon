@@ -145,7 +145,7 @@ def get_overpass_data():
         # Obtener parámetros de consulta del frontend
         lat = (request.args.get('lat'))
         lon = (request.args.get('lon'))
-        square_size = int(request.args.get('squareSize', 5000))  # Tamaño del área de impacto en metros (ajustable)
+        side_length = int(request.args.get('sideLength', 5000))  # Tamaño del área de impacto en metros (ajustable)
 
         # Validar que las coordenadas sean válidas
         if not lat or not lon:
@@ -158,15 +158,15 @@ def get_overpass_data():
         query = f"""
             [out:json];
             (
-              node["building"](around:{lat},{lon},{square_size});
-              way["building"](around:{lat},{lon},{square_size});
-              relation["building"](around:{lat},{lon},{square_size});
+              node["building"](around:{lat},{lon},{side_length});
+              way["building"](around:{lat},{lon},{side_length});
+              relation["building"](around:{lat},{lon},{side_length});
               
-              node["amenity"](around:{lat},{lon},{square_size});
-              way["amenity"](around:{lat},{lon},{square_size});
-              relation["amenity"](around:{lat},{lon},{square_size});
+              node["amenity"](around:{lat},{lon},{side_length});
+              way["amenity"](around:{lat},{lon},{side_length});
+              relation["amenity"](around:{lat},{lon},{side_length});
               
-              node["population"](around:{lat},{lon},{square_size});
+              node["population"](around:{lat},{lon},{side_length});
             );
             out body;
             >;

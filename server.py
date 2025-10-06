@@ -1,143 +1,86 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Servidor Flask simplificado para el Simulador de Impacto de Meteoritos
+Simplified Flask server for Meteorite Impact Simulator
+Production-ready for Render deployment
 """
 
 from flask import Flask, send_from_directory, request, jsonify
+from flask_cors import CORS
 import json
-import subprocess
 import os
-import threading
-import time
+import requests
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Configuración
-PYGAME_SCRIPT_PATH = os.path.join('python', 'meteor_impact_2d.py')
+# Configuration for production (no pygame needed in cloud)
 SIMULATION_DATA_FILE = 'simulation_data.json'
-
-class SimulationManager:
-    def __init__(self):
-        self.current_process = None
-        self.simulation_data = None
-    
-    def start_simulation(self, data):
-        """Iniciar simulación 2D con datos específicos"""
-        try:
-            # Guardar datos en archivo JSON
-            with open(SIMULATION_DATA_FILE, 'w') as f:
-                json.dump(data, f)
-            
-            # Terminar simulación anterior si existe
-            if self.current_process:
-                self.current_process.terminate()
-                self.current_process.wait()
-            
-            # Iniciar nueva simulación
-            self.current_process = subprocess.Popen([
-                'python', PYGAME_SCRIPT_PATH,
-                '--data-file', SIMULATION_DATA_FILE
-            ])
-            
-            self.simulation_data = data
-            return True
-            
-        except Exception as e:
-            print(f"Error al iniciar simulación: {e}")
-            return False
-    
-    def stop_simulation(self):
-        """Detener simulación actual"""
-        if self.current_process:
-            self.current_process.terminate()
-            self.current_process.wait()
-            self.current_process = None
-    
-    def is_running(self):
-        """Verificar si la simulación está ejecutándose"""
-        if self.current_process:
-            return self.current_process.poll() is None
-        return False
-
-# Instancia global del administrador de simulación
-sim_manager = SimulationManager()
 
 @app.route('/')
 def index():
-    """Página principal"""
+    """Main page"""
     return send_from_directory('.', 'index.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    """Servir archivos estáticos"""
+    """Serve static files"""
     return send_from_directory('.', filename)
 
 @app.route('/api/simulation/start', methods=['POST'])
 def start_simulation():
-    """Iniciar simulación 2D"""
+    """Initialize simulation (web-based, no pygame in production)"""
     try:
         data = request.get_json()
         
         if not data:
-            return jsonify({'error': 'No se proporcionaron datos'}), 400
+            return jsonify({'error': 'No data provided'}), 400
         
-        # Validar datos requeridos
-        required_fields = ['effects']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'Campo requerido faltante: {field}'}), 400
+        # Save simulation data for reference
+        with open(SIMULATION_DATA_FILE, 'w') as f:
+            json.dump(data, f)
         
-        # Iniciar simulación
-        success = sim_manager.start_simulation(data)
-        
-        if success:
-            return jsonify({
-                'status': 'success',
-                'message': 'Simulación 2D iniciada correctamente',
-                'pid': sim_manager.current_process.pid if sim_manager.current_process else None
-            })
-        else:
-            return jsonify({'error': 'No se pudo iniciar la simulación'}), 500
-            
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/simulation/stop', methods=['POST'])
-def stop_simulation():
-    """Detener simulación 2D"""
-    try:
-        sim_manager.stop_simulation()
         return jsonify({
             'status': 'success',
-            'message': 'Simulación detenida correctamente'
+            'message': 'Simulation data saved successfully',
+            'data': data
         })
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/simulation/status', methods=['GET'])
 def simulation_status():
-    """Obtener estado de la simulación"""
+    """Get simulation status"""
     try:
-        return jsonify({
-            'running': sim_manager.is_running(),
-            'data': sim_manager.simulation_data
-        })
+        # Try to read saved simulation data
+        if os.path.exists(SIMULATION_DATA_FILE):
+            with open(SIMULATION_DATA_FILE, 'r') as f:
+                data = json.load(f)
+            return jsonify({
+                'running': True,
+                'data': data
+            })
+        else:
+            return jsonify({
+                'running': False,
+                'data': None
+            })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/nasa/neo', methods=['GET'])
 def get_nasa_data():
-    """Proxy para datos de la NASA API"""
+    """Proxy for NASA API data"""
     try:
         import requests
         
-        # Parámetros de la consulta
+        # Query parameters
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         api_key = request.args.get('api_key', 'DEMO_KEY')
         
-        # Construir URL
+        # Build URL
         url = f"https://api.nasa.gov/neo/rest/v1/feed"
         params = {
             'api_key': api_key
@@ -183,6 +126,55 @@ def geocoding():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/sbdb', methods=['GET'])
+def nasa_sbdb_proxy():
+    """Proxy para NASA Small-Body Database API"""
+    try:
+        # Obtener parámetros
+        sstr = request.args.get('sstr')
+        full_prec = request.args.get('full-prec', 'true')
+        
+        if not sstr:
+            return jsonify({'error': 'Parameter sstr required'}), 400
+        
+        # Construir URL
+        url = 'https://ssd-api.jpl.nasa.gov/sbdb.api'
+        params = {
+            'sstr': sstr,
+            'full-prec': full_prec
+        }
+        
+        # Realizar consulta a NASA
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        
+        return jsonify(response.json())
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sbdb_query', methods=['POST'])
+def nasa_sbdb_query_proxy():
+    """Proxy para NASA SBDB Query API"""
+    try:
+        # Obtener body de la solicitud
+        query_data = request.get_json()
+        
+        if not query_data:
+            return jsonify({'error': 'Query data required'}), 400
+        
+        # URL de la API
+        url = 'https://ssd-api.jpl.nasa.gov/sbdb_query.api'
+        
+        # Realizar consulta a NASA
+        response = requests.post(url, json=query_data, timeout=30)
+        response.raise_for_status()
+        
+        return jsonify(response.json())
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/impact/calculate', methods=['POST'])
 def calculate_impact():
     """Calcular efectos de impacto"""
@@ -200,7 +192,7 @@ def calculate_impact():
         velocity = float(data['velocity'])
         density = data['density']
         
-        # Cálculos simplificados
+        # Simplified calculations
         density_values = {
             'iron': 7.8,
             'stone': 3.0,
@@ -215,18 +207,18 @@ def calculate_impact():
         energy_joules = 0.5 * mass * (velocity_ms ** 2)
         energy_megatons = energy_joules / (4.184e15)
         
-        # Calcular efectos
+        # Calculate effects
         crater_diameter = (energy_megatons ** 0.294) * 800
         total_destruction_zone = (energy_megatons ** 0.33) * 2.5
         severe_destruction_zone = (energy_megatons ** 0.33) * 5
         moderate_destruction_zone = (energy_megatons ** 0.33) * 10
         
-        # Estimar víctimas (simplificado)
+        # Estimate casualties (simplified)
         population_density = data.get('population_density', 1000)
         fatalities = int(total_destruction_zone * total_destruction_zone * 3.14159 * population_density * 0.5)
         injuries = int(fatalities * 3)
         
-        # Efectos secundarios
+        # Secondary effects
         earthquake_magnitude = max(0, (energy_megatons ** 0.5) * 2)
         tsunami_height = max(1, (energy_megatons ** 0.4) * 20)
         fire_radius = max(1, (energy_megatons ** 0.33) * 3)
@@ -259,7 +251,7 @@ def calculate_impact():
             },
             'impactClassification': {
                 'level': 'Regional' if energy_megatons < 10 else 'Continental',
-                'description': 'Impacto regional con daños significativos' if energy_megatons < 10 else 'Impacto continental con devastación masiva'
+                'description': 'Regional impact with significant damage' if energy_megatons < 10 else 'Continental impact with massive devastation'
             }
         }
         
@@ -269,80 +261,66 @@ def calculate_impact():
         return jsonify({'error': str(e)}), 500
     
 
-@app.route('/api/overpass', methods=['POST'])  # Debe aceptar POST, no GET
-def get_overpass_data():
-    """Proxy para Overpass API"""
+OVERPASS_URL = "http://overpass-api.de/api/interpreter"
+
+@app.route('/overpass', methods=['GET'])
+def overpass():
     try:
-        import requests  # Importar requests para usarlo en esta función
-        # Obtener parámetros de consulta del frontend
-        lat = request.args.get('lat')
-        lon = request.args.get('lon')
-        square_size = int(request.args.get('squareSize', 5000))  # Tamaño del área de impacto en metros (ajustable)
+        # Obtener las coordenadas de la solicitud
+        lat = request.args.get('lat', type=float)
+        lon = request.args.get('lon', type=float)
+        radius = request.args.get('radius', default=1000, type=int)  # Radio en metros (por defecto 1 km)
 
-        # Validar que las coordenadas sean válidas
-        if not lat or not lon:
-            return jsonify({'error': 'Coordenadas lat/lon son necesarias'}), 400
-
-        # URL de Overpass API
-        
-
-        # Consulta Overpass API para obtener edificios, infraestructura y población
-        query = f"""
-            [out:json];
-            (
-              node["building"](around:{lat},{lon},{square_size});
-              way["building"](around:{lat},{lon},{square_size});
-              relation["building"](around:{lat},{lon},{square_size});
-              
-              node["amenity"](around:{lat},{lon},{square_size});
-              way["amenity"](around:{lat},{lon},{square_size});
-              relation["amenity"](around:{lat},{lon},{square_size});
-              
-              node["population"](around:{lat},{lon},{square_size});
-            );
-            out body;
-            >;
-            out skel qt;
+        # Consulta Overpass API para obtener datos dentro del radio especificado
+        overpass_query = f"""
+        [out:json];
+        (
+          node(around:{radius},{lat},{lon});
+          way(around:{radius},{lat},{lon});
+          relation(around:{radius},{lat},{lon});
+        );
+        out body;
         """
-        overpass_url = "https://overpass-api.de/api/interpreter"
-        # Mostrar la consulta en la consola (útil para depuración)
-        print(f"Consulta enviada a Overpass API: {query}")
-        
-        # Realizar la solicitud a Overpass API
-        response = requests.post(overpass_url, data={'data': query})
-        response.raise_for_status()  # Si hay un error, se lanzará una excepción
+        response = requests.get(OVERPASS_URL, params={'data': overpass_query})
 
-        # Devolver los datos obtenidos de Overpass API
-        return jsonify(response.json())
-
-    except requests.exceptions.RequestException as e:
-        # Capturar cualquier error de la solicitud (como problemas de red)
+        # Manejar la respuesta de Overpass
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": "Error al obtener datos de Overpass API"}), 500
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 @app.errorhandler(404)
 def not_found(error):
-    """Manejar errores 404"""
-    return jsonify({'error': 'Endpoint no encontrado'}), 404
+    """Handle 404 errors"""
+    return jsonify({'error': 'Endpoint not found'}), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    """Manejar errores 500"""
-    return jsonify({'error': 'Error interno del servidor'}), 500
+    """Handle 500 errors"""
+    return jsonify({'error': 'Internal server error'}), 500
 
 def cleanup_on_exit():
-    """Limpiar recursos al salir"""
-    sim_manager.stop_simulation()
+    """Clean up resources on exit"""
     if os.path.exists(SIMULATION_DATA_FILE):
-        os.remove(SIMULATION_DATA_FILE)
+        try:
+            os.remove(SIMULATION_DATA_FILE)
+        except:
+            pass
 
 if __name__ == '__main__':
     import atexit
     atexit.register(cleanup_on_exit)
     
-    print("🌍 Iniciando Simulador de Impacto de Meteoritos")
-    print("📡 Servidor Flask ejecutándose en http://localhost:5000")
-    print("🎮 La simulación 2D se abrirá automáticamente cuando se inicie una simulación")
-    print("📁 Sirviendo archivos desde:", os.getcwd())
+    # Get port from environment variable (Render provides this)
+    port = int(os.environ.get('PORT', 5000))
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    print("🌍 Initializing Meteorite Impact Simulator")
+    print(f"📡 Flask server running on port {port}")
+    print("📁 Serving files from:", os.getcwd())
+    print("🚀 Production mode enabled")
+    
+    # Production settings
+    app.run(debug=False, host='0.0.0.0', port=port)
