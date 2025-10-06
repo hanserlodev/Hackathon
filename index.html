@@ -1,66 +1,86 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Impacto de Meteoritos</title>
+    <title>NEO IMPACT ASSESSMENT SYSTEM - NASA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Encabezado principal / Main header -->
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="nasa-logo">🛰️</div>
+            <h1>NEO IMPACT ASSESSMENT SYSTEM</h1>
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <div class="loading-status">
+                <p id="loading-message">Initializing NASA APIs...</p>
+                <div class="loading-progress">
+                    <div id="loading-bar" class="loading-bar"></div>
+                </div>
+                <p id="loading-details" class="loading-details"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="opacity: 0; transition: opacity 0.5s;">
+        <!-- Main header -->
         <header class="header">
-            <h1>🌍 Simulation of Meteorite Impact</h1>
-            <p>Explore the consequences of meteorite impacts in real-time</p>
+            <h1>⚠️ NEO IMPACT ASSESSMENT SYSTEM</h1>
+            <p>⚡ CRITICAL THREAT ANALYSIS PROTOCOL ⚡</p>
         </header>
 
-        <!-- Panel de control / Control panel -->
+        <!-- Control panel -->
         <div class="control-panel">
             <div class="input-group">
-                <label for="location-input">Ubicación del Impacto:</label>
-                <input type="text" id="location-input" placeholder="Ej: Denver, CO o 39.7392, -104.9903">
-                <button id="search-location">Buscar</button>
+                <label for="location-input">Impact Location:</label>
+                <input type="text" id="location-input" placeholder="e.g., Denver, CO or 39.7392, -104.9903">
+                <button id="search-location">Search</button>
             </div>
             <div id="location-info"></div>
 
             <div class="meteor-params">
 
-                <label for="meteor-select">Seleccionar Meteorito:</label>
+                <label for="meteor-select">Select Meteorite:</label>
                 <select id="meteor-select">
-                    <!-- Los meteoritos se llenarán dinámicamente aquí -->
+                    <!-- Meteorites will be populated dynamically -->
                 </select>
 
-                <h3>Meteorite Parameters</h3>
+                <h3>Meteorite Physical Parameters</h3>
 
                 <div class="param-group">
-                    <label for="meteor-size">Tamaño (metros):</label>
-                    <input type="range" id="meteor-size" min="10" max="1000" value="180">
+                    <label for="meteor-size">Diameter (meters):</label>
+                    <input type="range" id="meteor-size" min="10" max="40000" value="180" step="10">
                     <span id="size-value">180m</span>
                 </div>
 
                 <div class="param-group">
-                    <label for="meteor-speed">Velocidad (km/s):</label>
-                    <input type="range" id="meteor-speed" min="11" max="70" value="24">
-                    <span id="speed-value">24 km/s</span>
+                    <label for="meteor-velocity">Velocity (km/s):</label>
+                    <input type="range" id="meteor-velocity" min="11" max="1000" value="24" step="1">
+                    <span id="velocity-value">24 km/s</span>
                 </div>
 
                 <div class="param-group">
-                    <label for="meteor-angle">Ángulo de Entrada (°):</label>
+                    <label for="meteor-angle">Entry Angle (°):</label>
                     <input type="range" id="meteor-angle" min="10" max="90" value="45">
                     <span id="angle-value">45°</span>
                 </div>
 
                 <div class="param-group">
-                    <label for="meteor-density">Densidad:</label>
+                    <label for="meteor-density">Material Density:</label>
                     <select id="meteor-density">
-                        <option value="iron">Hierro (7.8 g/cm³)</option>
-                        <option value="stone" selected>Piedra (3.0 g/cm³)</option>
-                        <option value="ice">Hielo (0.9 g/cm³)</option>
-                        <option value="gold">Oro (19.3 g/cm³)</option>
-                        <option value="comet">Cometa (0.0001 g/cm³)</option>
-                        <option value="carbon">Asteroide de carbono (2.2 g/cm³)</option>
+                        <option value="iron">Iron (7.8 g/cm³)</option>
+                        <option value="stone" selected>Stone (3.0 g/cm³)</option>
+                        <option value="ice">Ice (0.9 g/cm³)</option>
+                        <option value="gold">Gold (19.3 g/cm³)</option>
+                        <option value="comet">Comet (0.0001 g/cm³)</option>
+                        <option value="carbon">Carbonaceous Asteroid (2.2 g/cm³)</option>
                     </select>
                 </div>
             </div>
@@ -69,13 +89,13 @@
 
 
             <div class="simulation-controls">
-                <button id="start-simulation" class="btn-primary">Iniciar Simulación</button>
-                <button id="reset-simulation" class="btn-secondary">Reiniciar</button>
+                <button id="start-simulation" class="btn-primary">⚠️ INITIATE IMPACT ASSESSMENT</button>
+                <button id="reset-simulation" class="btn-secondary">↻ RESET SYSTEM</button>
             </div>
             
         </div>
 
-        <!-- Contenido principal / Main content -->
+        <!-- Main content -->
         <div class="main-content">
             <div class="visualization-container">
                 <div id="earth-container" class="earth-view">
@@ -85,23 +105,27 @@
                 <div id ="visualization-message" class="visualization-message" aria-live="polite"></div>
 
                 <div class="impact-data" id="impact-data">
-                    <h3>Datos del Impacto</h3>
+                    <h3>⚠️ IMPACT ASSESSMENT DATA</h3>
                     <div class="data-grid">
                         <div class="data-item">
-                            <span class="label">Energía Liberada:</span>
+                            <span class="label">ENERGY YIELD:</span>
                             <span class="value" id="energy-value">-</span>
                         </div>
                         <div class="data-item">
-                            <span class="label">Diámetro del Cráter:</span>
+                            <span class="label">CRATER SIZE:</span>
                             <span class="value" id="crater-diameter">-</span>
                         </div>
                         <div class="data-item">
-                            <span class="label">Víctimas Estimadas:</span>
+                            <span class="label">CASUALTIES:</span>
                             <span class="value" id="casualties">-</span>
                         </div>
                         <div class="data-item">
-                            <span class="label">Zona de Destrucción:</span>
+                            <span class="label">KILL RADIUS:</span>
                             <span class="value" id="destruction-zone">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">POPULATION:</span>
+                            <span class="value" id="population-density">-</span>
                         </div>
                     </div>
                 </div>
@@ -109,22 +133,29 @@
 
 
             <div class="effects-panel">
-                <h3>Efectos Secundarios</h3>
+                <h3>🔴 CATASTROPHIC EFFECTS ANALYSIS</h3>
                 <div class="effects-grid">
                     <div class="effect-item" id="earthquake-effect">
                         <div class="effect-icon">🌍</div>
                         <div class="effect-info">
-                            <h4>Terremoto</h4>
-                            <p id="earthquake-magnitude">Magnitud: -</p>
+                            <h4>SEISMIC WAVES</h4>
+                            <p id="earthquake-magnitude">Magnitude: -</p>
                         </div>
                     </div>
 
+                    <div class="effect-item" id="blast-wave-effect">
+                        <div class="effect-icon">💥</div>
+                        <div class="effect-info">
+                            <h4>BLAST OVERPRESSURE</h4>
+                            <p id="blast-wave-zones">Zones: -</p>
+                        </div>
+                    </div>
 
                     <div class="effect-item" id="tsunami-effect">
                         <div class="effect-icon">🌊</div>
                         <div class="effect-info">
-                            <h4>Tsunami</h4>
-                            <p id="tsunami-height">Altura: -</p>
+                            <h4>TSUNAMI GENERATION</h4>
+                            <p id="tsunami-height">Height: -</p>
                         </div>
                     </div>
 
@@ -132,8 +163,8 @@
                     <div class="effect-item" id="fire-effect">
                         <div class="effect-icon">🔥</div>
                         <div class="effect-info">
-                            <h4>Incendios</h4>
-                            <p id="fire-radius">Radio: -</p>
+                            <h4>THERMAL RADIATION</h4>
+                            <p id="fire-radius">Radius: -</p>
                         </div>
                     </div>
 
@@ -141,96 +172,185 @@
                     <div class="effect-item" id="dust-effect">
                         <div class="effect-icon">🌫️</div>
                         <div class="effect-info">
-                            <h4>Nube de Polvo</h4>
-                            <p id="dust-radius">Radio: -</p>
+                            <h4>EJECTA DISPERSION</h4>
+                            <p id="dust-radius">Radius: -</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Panel de estadísticas / Statistics panel -->
+        <!-- Statistics panel -->
         <section class="statistics-panel" aria-labelledby="statistics-title">
-            <h2 id="statistics-title">📊 Estadísticas de la Semana</h2>
+            <h2 id="statistics-title">⚠️ NEO THREAT MONITORING (7-DAY)</h2>
             <div class="stats-grid">
                 <article class="stat-card">
-                    <h3>Total de objetos</h3>
+                    <h3>TRACKED OBJECTS</h3>
                     <p id="stat-total">121</p>
-                    <span id="stat-hazard-percentage">2.5% peligrosos</span>
+                    <span id="stat-hazard-percentage">2.5% HAZARDOUS</span>
                 </article>
                 <article class="stat-card">
-                    <h3>Potencialmente peligrosos</h3>
+                    <h3>CRITICAL THREATS</h3>
                     <p id="stat-hazardous">3</p>
-                    <span>Vigilancia activa</span>
+                    <span>ACTIVE SURVEILLANCE</span>
                 </article>
                 <article class="stat-card">
-                    <h3>Tamaño promedio</h3>
+                    <h3>AVG DIAMETER</h3>
                     <p id="stat-average-size">88 m</p>
-                    <span>Estimación global</span>
+                    <span>ESTIMATED SIZE</span>
                 </article>
                 <article class="stat-card">
-                    <h3>Velocidad promedio</h3>
+                    <h3>AVG VELOCITY</h3>
                     <p id="stat-average-velocity">13.8 km/s</p>
-                    <span>Velocidad relativa</span>
+                    <span>RELATIVE SPEED</span>
                 </article>
                 <article class="stat-card">
-                    <h3>Última actualización</h3>
-                    <p id="stat-last-update">4/10/2025, 11:02:37 a. m.</p>
-                    <span>Datos simulados</span>
+                    <h3>LAST UPDATED</h3>
+                    <p id="stat-last-update">10/4/2025, 11:02:37 AM</p>
+                    <span>LIVE DATASET</span>
                 </article>
             </div>
         </section>
 
-        <!-- Panel de mitigación / Mitigation panel -->
-        <div class="mitigation-panel" id="mitigation-panel" style="display: none;">
-            <h3>Métodos de Mitigación</h3>
+        <!-- Mitigation panel -->
+        <div class="mitigation-panel" id="mitigation-panel" style="display: block;">
+            <h3>⚡ PLANETARY DEFENSE PROTOCOLS</h3>
+            <p class="mitigation-intro">NASA and international space agencies have developed multiple intervention strategies for asteroid threat mitigation. Current research focuses on the following proven methodologies:</p>
             <div class="mitigation-options">
-                <div class="mitigation-card">
-                    <h4>Desviación por Impacto Cinético</h4>
-                    <p>Enviar una nave espacial para impactar y desviar el meteorito</p>
-                    <button class="mitigation-mode" data-method="kinetic">Aplicar</button>
+                <div class="mitigation-card info-card">
+                    <h4>🚀 KINETIC IMPACTOR</h4>
+                    <p class="strategy-description">High-velocity spacecraft collision to alter asteroid trajectory through momentum transfer.</p>
+                    <div class="strategy-details">
+                        <p><strong>LEAD TIME:</strong> 2-5 years minimum</p>
+                        <p><strong>EFFECTIVENESS:</strong> High (asteroids up to 500m diameter)</p>
+                        <p><strong>MISSION REFERENCE:</strong> NASA DART (2022) - Dimorphos deflection confirmed</p>
+                        <p><strong>CONSTRAINTS:</strong> Precise targeting required, extended preparation window</p>
+                    </div>
                 </div>
 
-
-                <div class="mitigation-card">
-                    <h4>Gravedad Artificial</h4>
-                    <p>Usar una nave masiva para desviar el meteorito con su gravedad</p>
-                    <button class="mitigation-mode" data-method="gravity">Aplicar</button>
+                <div class="mitigation-card info-card">
+                    <h4>🛰️ GRAVITY TRACTOR</h4>
+                    <p class="strategy-description">Spacecraft gravitational field manipulation for gradual trajectory correction.</p>
+                    <div class="strategy-details">
+                        <p><strong>Lead Time Required:</strong> 10-20 years</p>
+                        <p><strong>Effectiveness:</strong> Moderate, requires extended operation</p>
+                        <p><strong>Advantages:</strong> Non-contact method, predictable deflection</p>
+                        <p><strong>Limitations:</strong> Very long lead time required, high fuel costs</p>
+                    </div>
                 </div>
 
-
-                <div class="mitigation-card">
-                    <h4>Láser Ablativo</h4>
-                    <p>Usar láseres para vaporizar material y cambiar la trayectoria</p>
-                    <button class="mitigation-mode" data-method="laser">Aplicar</button>
+                <div class="mitigation-card info-card">
+                    <h4>⚡ Laser Ablation</h4>
+                    <p class="strategy-description">Use high-powered lasers to vaporize surface material, creating reactive thrust for orbital modification.</p>
+                    <div class="strategy-details">
+                        <p><strong>Lead Time Required:</strong> 5-15 years</p>
+                        <p><strong>Effectiveness:</strong> Moderate for small asteroids</p>
+                        <p><strong>Technology:</strong> Requires powerful solar-powered or nuclear laser arrays</p>
+                        <p><strong>Limitations:</strong> Technology still in development phase</p>
+                    </div>
                 </div>
 
-
-                <div class="mitigation-card">
-                    <h4>Refugios Subterráneos</h4>
-                    <p>Construir refugios para proteger a la población</p>
-                    <button class="mitigation-mode" data-method="shelters">Aplicar</button>
+                <div class="mitigation-card info-card">
+                    <h4>🏛️ Underground Shelters</h4>
+                    <p class="strategy-description">Last-resort mitigation: construct hardened facilities to protect populations from blast effects and fallout.</p>
+                    <div class="strategy-details">
+                        <p><strong>Construction Time:</strong> 1-3 years</p>
+                        <p><strong>Protection Level:</strong> High against overpressure and thermal radiation</p>
+                        <p><strong>Capacity:</strong> Varies by design (hundreds to thousands)</p>
+                        <p><strong>Use Case:</strong> When deflection is not feasible or has failed</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Alertas de meteoritos cercanos / Hazard alerts -->
+        <!-- Hazard alerts -->
         <div class="alerts-panel">
-            <h3>🚨 Alertas de Peligro</h3>
+            <h3>🚨 Hazard Alerts</h3>
             <div id="hazard-alerts" class="neo-list" aria-live="polite"></div>
         </div>
+
+        <!-- NEO DATABASE ANALYSIS -->
+        <section class="neo-analysis-panel">
+            <h2>📊 NEO DATABASE - THREAT CLASSIFICATION SYSTEM</h2>
+            
+            <!-- Size Distribution -->
+            <div class="neo-stats-summary">
+                <div class="stat-highlight">
+                    <h3>57</h3>
+                    <p>TRACKED OBJECTS</p>
+                </div>
+                <div class="stat-highlight">
+                    <h3>3.16m - 401.37m</h3>
+                    <p>SIZE RANGE</p>
+                </div>
+                <div class="stat-highlight">
+                    <h3>15</h3>
+                    <p>ACTIVE CATEGORIES</p>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div id="neo-categories" class="neo-categories-grid"></div>
+        </section>
+
+        <!-- MEDICAL EMERGENCY PROTOCOLS -->
+        <section class="emergency-protocols-panel">
+            <h2>⚕️ MEDICAL EMERGENCY RESPONSE PROTOCOLS</h2>
+            
+            <!-- Triage System -->
+            <div class="triage-section">
+                <h3>🏥 TRIAGE CLASSIFICATION SYSTEM</h3>
+                <div id="triage-levels" class="triage-grid"></div>
+            </div>
+
+            <!-- Response Phases -->
+            <div class="response-phases-section">
+                <h3>⏱️ MULTI-PHASE RESPONSE TIMELINE</h3>
+                <div id="response-phases" class="phases-timeline"></div>
+            </div>
+        </section>
+
+        <!-- SEVERITY MATRICES -->
+        <section class="severity-matrices-panel">
+            <h2>⚠️ MULTI-THREAT SEVERITY ASSESSMENT</h2>
+            
+            <!-- Shock Wave Matrix -->
+            <div class="severity-category">
+                <h3>💥 SHOCK WAVE SEVERITY (dB SPL)</h3>
+                <div id="shock-wave-matrix" class="severity-matrix"></div>
+            </div>
+
+            <!-- Seismic Matrix -->
+            <div class="severity-category">
+                <h3>🌍 SEISMIC ACTIVITY (RICHTER SCALE)</h3>
+                <div id="seismic-matrix" class="severity-matrix"></div>
+            </div>
+
+            <!-- Thermal Radiation Matrix -->
+            <div class="severity-category">
+                <h3>🔥 THERMAL RADIATION (TEMPERATURE/DIAMETER)</h3>
+                <div id="thermal-matrix" class="severity-matrix"></div>
+            </div>
+        </section>
     </div>
 
     <!-- Scripts -->
+    <script type="module" src="js/loading-screen.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> <!-- Leaflet.js se carga primero -->
+    <script type="module" src="js/known-asteroids.js"></script>
+    <script type="module" src="js/nasa-sbdb-api.js"></script>
+    <script type="module" src="js/nasa-sbdb-init.js"></script>
+    <script type="module" src="js/neo-database.js"></script>
+    <script type="module" src="js/emergency-protocols.js"></script>
+    <script type="module" src="js/neo-analysis-ui.js"></script>
     <script src="js/earth-map-2d.js"></script> <!-- Luego, el archivo que usa Leaflet -->
     <script src="js/nasa-api.js"></script>
-    <script src="js/simulation.js"></script>
+    <script type="module" src="js/simulation.js"></script>
     <script src="js/server-integration.js"></script>
     <script src="js/overpass.js"></script> <!-- Debe estar antes de main.js -->
+    <script src="js/map.js"></script>
     <script src="js/calculations.js"></script>
-    <script src="js/mitigation-fixed.js"></script>
     <script src="js/main.js"></script> <!-- Finalmente, carga main.js -->
 
 

@@ -1,167 +1,229 @@
-// Inicialización ligera de la aplicación / Lightweight application bootstrap.
+// Lightweight application bootstrap
 const tody = new Date();
 const lastWeek = new Date();
 lastWeek.setDate(tody.getDate() - 7);
 
 const start_date = lastWeek.toISOString().split("T")[0];
 const end_date = tody.toISOString().split("T")[0];
-console.log("Fechas para datos NEO:", start_date, end_date);
+console.log("NEO data date range:", start_date, end_date);
 
 document.addEventListener("DOMContentLoaded", () => {
   const simulation = new MeteorSimulation();
   const dataProvider = new NASAAPI();
-  const mitigationSystem = new MitigationSystem();
 
   window.MeteorSimulation = simulation;
   window.NASAAPI = dataProvider;
-  window.MitigationSystem = mitigationSystem;
 
-  // Mostrar datos simulados al inicio / Render simulated data on load.
+  // Display simulated data on initialization
   dataProvider.displayNearEarthObjects();
-
-  console.log("Llamando a populateMeteoriteSelect");
   dataProvider.populateMeteoriteSelect(start_date, end_date);
   dataProvider.updateMeteoriteParameters();
 
   const meteorSelect = document.getElementById("meteor-select");
   meteorSelect.addEventListener("change", async (event) => {
-    const selectedName = event.target.value;
-    const neoData = await dataProvider.getNEOData();
-    const selectedNEO = neoData.find((neo) => neo.name === selectedName);
-
-    if (selectedNEO) {
-      // Actualizar los parámetros del meteorito en la UI
-      document.getElementById(
-        "meteor-size"
-      ).textContent = `${selectedNEO.size.toFixed(2)} m`;
-      document.getElementById(
-        "meteor-velocity"
-      ).textContent = `${selectedNEO.velocity.toFixed(1)} km/h`;
-      document.getElementById("meteor-hazard").textContent =
-        selectedNEO.hazardLevel;
+    const selectedValue = event.target.value;
+    const selectedOption = event.target.options[event.target.selectedIndex];
+    
+    // Don't process if 'manual' is selected
+    if (selectedValue === "manual") {
+      console.log("Manual configuration mode selected");
+      return;
     }
+    
+    let diameter, velocityKmS;
+    
+    // Check if it's a famous meteorite (has data attributes)
+    if (selectedOption.dataset.size && selectedOption.dataset.velocity) {
+      diameter = parseFloat(selectedOption.dataset.size);
+      velocityKmS = parseFloat(selectedOption.dataset.velocity);
+      
+      console.log(`Famous meteorite selected: ${selectedValue}`);
+      console.log(`Using stored values - Diameter: ${diameter}m, Velocity: ${velocityKmS} km/s`);
+    } else {
+      // It's a NEO from the API
+      const neoData = await dataProvider.getNEOData(start_date, end_date);
+      const selectedNEO = neoData.find((neo) => neo.name === selectedValue);
+
+      if (!selectedNEO) {
+        console.error("Selected meteorite not found in NEO data");
+        return;
+      }
+
+      diameter = selectedNEO.size;
+      // Convert velocity from km/h to km/s
+      velocityKmS = selectedNEO.velocity / 3600;
+      
+      console.log(`NEO meteorite selected: ${selectedValue}`);
+      console.log(`API values - Diameter: ${diameter.toFixed(2)}m, Velocity: ${velocityKmS.toFixed(2)} km/s`);
+    }
+    
+    // Update sliders with meteorite data
+    const sizeSlider = document.getElementById("meteor-size");
+    const velocitySlider = document.getElementById("meteor-velocity");
+    const densitySelect = document.getElementById("meteor-density");
+    
+    if (sizeSlider) {
+      // Ensure diameter is within slider range
+      const clampedDiameter = Math.min(Math.max(diameter, 10), 40000);
+      sizeSlider.value = Math.round(clampedDiameter);
+      
+      const formatted = clampedDiameter >= 1000 
+        ? `${(clampedDiameter/1000).toFixed(1)} km` 
+        : `${Math.round(clampedDiameter)}m`;
+      document.getElementById("size-value").textContent = formatted;
+    }
+    
+    if (velocitySlider) {
+      // Ensure velocity is within slider range
+      const clampedVelocity = Math.min(Math.max(velocityKmS, 11), 1000);
+      velocitySlider.value = Math.round(clampedVelocity);
+      document.getElementById("velocity-value").textContent = `${Math.round(clampedVelocity)} km/s`;
+    }
+    
+    // Update material density based on asteroid type
+    if (densitySelect) {
+      // Try to determine asteroid type from name or properties
+      const asteroidName = selectedValue.toLowerCase();
+      let densityType = 'stone'; // Default
+      
+      // C-type asteroids (carbonaceous) - dark, carbon-rich
+      if (asteroidName.includes('bennu') || asteroidName.includes('ryugu') || 
+          asteroidName.includes('1999 jm8') || asteroidName.includes('1999 rq36')) {
+        densityType = 'carbon';
+      }
+      // M-type asteroids (metallic) - metal-rich
+      else if (asteroidName.includes('psyche') || asteroidName.includes('kleopatra')) {
+        densityType = 'iron';
+      }
+      // Comets and icy bodies
+      else if (asteroidName.includes('comet') || asteroidName.includes('halley') || 
+               selectedOption.dataset.type === 'comet') {
+        densityType = 'comet';
+      }
+      // S-type asteroids (stony) - most common, default
+      else {
+        densityType = 'stone';
+      }
+      
+      densitySelect.value = densityType;
+      console.log(`Material density set to: ${densityType}`);
+    }
+    
+    console.log(`Sliders updated successfully`);
   });
 });
 
 window.addEventListener("load", async () => {
   const mapContainer = document.getElementById("map");
   if (!mapContainer) {
-    console.error("No se encontró el contenedor del mapa.");
+    console.error("Map container element not found.");
     return;
   }
 
-  const map = L.map("map").setView([39.7392, -104.9903], 10);
-  console.log(map);
+  // Check if map is already initialized - prevent double init
+  if (window.impactMap) {
+    console.log("Map already initialized, using existing instance");
+    return;
+  }
+  
+  // Check if Leaflet already initialized this container
+  if (mapContainer._leaflet_id) {
+    console.log("Leaflet already initialized this container");
+    return;
+  }
+
+  const map = L.map("map").setView([39.7392, -104.9903], 4);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
 
-let marker = null; // Variable para almacenar el marcador
+  // Store map globally to prevent re-initialization
+  window.impactMap = map;
 
-// Evento de clic en el mapa
-map.on("click", async function (e) {
-  if (marker) {
-    map.removeLayer(marker); // Eliminar el marcador si ya existe
+  let marker = null;
+
+  // Map click event handler
+  map.on("click", async function (e) {
+    if (marker) {
+      map.removeLayer(marker);
+    }
+    marker = L.marker(e.latlng).addTo(map);
+
+    const lat = e.latlng.lat.toFixed(4);
+    const lon = e.latlng.lng.toFixed(4);
+
+    getLocationDetails(lat, lon);
+    const input = document.getElementById("location-input");
+    if (input) {
+      input.value = `${lat}, ${lon}`;
+    }
+  });
+
+  // Simulation initialization event
+  const startButton = document.getElementById("start-simulation");
+  startButton.addEventListener("click", async () => {
+    const locationInput = document.getElementById("location-input").value;
+    const meteorSelect = document.getElementById("meteor-select").value;
+
+    // Retrieve meteorite parameters and location
+    const meteorDetails = await getMeteorDetails(meteorSelect);
+    const [lat, lon] = locationInput.split(',').map(coord => parseFloat(coord.trim()));
+
+    // Fetch infrastructure and population data from Overpass
+    const overpassData = await fetchImpactData(lat, lon, 5000);  // Assuming 5 km radius
+    if (overpassData) {
+      const { buildings, amenities, populations } = overpassData;
+
+      // Calculate population density
+      const areaKm2 = Math.pow(5000 / 1000, 2); // Convert 5000m side to km²
+      const populationDensity = areaKm2 > 0 ? (populations.length / areaKm2) : 0; // Simple density calculation
+
+      // Instantiate ImpactCalculations
+      const impactCalculations = new ImpactCalculations();
+
+      // Perform calculations using retrieved details
+      const results = impactCalculations.calculateAllEffects(
+        meteorDetails.diameter,
+        meteorDetails.velocity,
+        meteorDetails.material,
+        meteorDetails.impactAngle,
+        populationDensity
+      );
+
+      // Calculate destruction radius
+      const destructionRadius = impactCalculations.calculateTotalDestructionZone(
+        results.energy,
+        results.energyMegatons
+      );
+
+      // Update UI with calculated results
+      updateImpactDataUI(results);
+
+      // Display destruction radius in UI
+      document.getElementById("destruction-zone").textContent = `${destructionRadius.toFixed(2)} km`;
+    } else {
+      console.error("No data received from Overpass API.");
+    }
+  });
+
+  // Function to retrieve meteorite details
+  async function getMeteorDetails(meteorName) {
+    const selectedNEO = await dataProvider.getNEOData();
+    return selectedNEO.find((neo) => neo.name === meteorName);
   }
 
-  // Añadir un marcador donde el usuario haga clic
-  marker = L.marker(e.latlng).addTo(map);
+  // Function to update simulation results in UI
+  function updateImpactDataUI(results) {
+    // Update UI with calculated data
+    document.getElementById("energy-value").textContent = `${results.energyMegatons.toFixed(3)} MT`;
+    document.getElementById("crater-diameter").textContent = `${results.craterDiameter.toFixed(2)} km`;
+    document.getElementById("casualties").textContent = `${results.casualties.fatalities} fatalities / ${results.casualties.injuries} injuries`;
+    document.getElementById("destruction-zone").textContent = `${results.radiusOfDestruction.toFixed(2)} km`;
 
-  // Obtener las coordenadas del clic
-  const lat = e.latlng.lat.toFixed(4);
-  const lon = e.latlng.lng.toFixed(4);
-
-  console.log("Coordenadas seleccionadas:", lat, lon);
-
-  // Llamar a la función para obtener los detalles del lugar usando OpenCage
-  getLocationDetails(lat, lon);
-
-  // Actualizar el campo de texto con las coordenadas
-  const input = document.getElementById("location-input");
-  if (input) {
-    input.value = `${lat}, ${lon}`; // Mostrar las coordenadas en el campo de texto
-  }
-
-  const squareSize = 5000; // Tamaño del área de impacto en metros (ajustable)
-
-  // Llamar a la función para obtener los datos de infraestructura y población desde Overpass
-  const data = await fetchImpactData(lat, lon, squareSize);
-
-  if (data) {
-    const { buildings, amenities, populations } = processImpactData(data);
-    console.log("Edificios cercanos:", buildings);
-    console.log(
-      "Infraestructura cercanas (hospitales, escuelas, etc.):",
-      amenities
-    );
-    console.log("Población cercana:", populations);
-  } else {
-    console.error("No se recibieron datos de Overpass API.");
+    // Secondary effects
+    document.getElementById("earthquake-magnitude").textContent = `Magnitude: ${results.impactClassification.level}`;
+    document.getElementById("tsunami-height").textContent = `Height: ${results.impactClassification.level}`;
+    document.getElementById("fire-radius").textContent = `${results.fireRadius.toFixed(2)} km`;
+    document.getElementById("dust-radius").textContent = `${results.dustCloudRadius.toFixed(2)} km`;
   }
 });
-
-// Función para obtener detalles de la ubicación
-function getLocationDetails(lat, lon) {
-  const apiKey = '37eea66381f54ae78f6a16bb4cdda049'; // Usa tu clave API de OpenCage
-  const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}`;
-
-  fetch(url)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.results.length > 0) {
-        const address = data.results[0].components;
-
-        // Extraemos solo el distrito, provincia/departamento y país
-        const district =
-          address.district || address.city_district || address.suburb || "";
-        const state = address.state || address.province || address.region || "";
-        const country = address.country || "";
-
-        // Creamos la cadena de ubicación con distrito, estado y país
-        const locationString = `${district ? district + ", " : ""}${
-          state ? state + ", " : ""
-        }${country}`;
-
-        console.log("Dirección encontrada:", locationString); // Verifica que se obtiene correctamente
-
-        // Llamamos a setLocationInUI con la nueva ubicación
-        setLocationInUI(lat, lon, locationString); // Esta función actualizará la UI
-      } else {
-        console.error("No se encontró la ubicación.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error al obtener detalles de la ubicación:", error);
-    });
-}
-
-// Función para actualizar la UI con la nueva ubicación
-function setLocationInUI(lat, lon, locationString) {
-  const latNum = parseFloat(lat);
-  const lonNum = parseFloat(lon);
-  if (isNaN(latNum) || isNaN(lonNum)) {
-    console.error("Coordenadas inválidas:", lat, lon);
-    return;
-  }
-
-  // Actualizamos el campo de texto con la ubicación
-  const input = document.getElementById("location-input");
-  if (input) {
-    input.value = `${locationString} (${latNum.toFixed(2)}, ${lonNum.toFixed(
-      2
-    )})`;
-  }
-
-  // Actualizamos el contenedor de información
-  const locationInfoContainer = document.getElementById("location-info");
-  if (locationInfoContainer) {
-    locationInfoContainer.innerHTML = `
-            <h4>📍 Ubicación Seleccionada</h4>
-            <p><strong>Dirección:</strong> ${locationString}</p>
-            <p><strong>Latitud:</strong> ${latNum.toFixed(2)}°</p>
-            <p><strong>Longitud:</strong> ${lonNum.toFixed(2)}°</p>
-        `;
-  }
-}
-})

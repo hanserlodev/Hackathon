@@ -1,4 +1,6 @@
 // Integración con el servidor Python para la simulación 2D / Python server integration for the 2D simulation.
+// Note: MeteorSimulation will be available globally via window object
+
 class ServerIntegration {
     constructor() {
         this.serverUrl = 'http://localhost:5000';
@@ -313,13 +315,15 @@ class ServerIntegration {
 }
 
 // Extender la clase MeteorSimulation para incluir integración 2D / Extend MeteorSimulation to include 2D integration.
-class MeteorSimulationWith2D extends MeteorSimulation {
-    constructor() {
-        super();
-        this.serverIntegration = new ServerIntegration();
-        this.nasaAPI = window.nasaAPI || this.nasaAPI;
-        this.setup2DIntegration();
-    }
+// Only extend if MeteorSimulation is available
+if (typeof MeteorSimulation !== 'undefined') {
+    class MeteorSimulationWith2D extends MeteorSimulation {
+        constructor() {
+            super();
+            this.serverIntegration = new ServerIntegration();
+            this.nasaAPI = window.nasaAPI || this.nasaAPI;
+            this.setup2DIntegration();
+        }
     
     async setup2DIntegration() {
         // Inicializar integración con servidor / Initialize server integration.
@@ -407,7 +411,10 @@ class MeteorSimulationWith2D extends MeteorSimulation {
         }
     }
 }
+} // Close if (typeof MeteorSimulation !== 'undefined')
 
 // Exportar para uso global / Expose globally.
 window.ServerIntegration = ServerIntegration;
-window.MeteorSimulationWith2D = MeteorSimulationWith2D;
+if (typeof MeteorSimulationWith2D !== 'undefined') {
+    window.MeteorSimulationWith2D = MeteorSimulationWith2D;
+}

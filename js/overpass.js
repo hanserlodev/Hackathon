@@ -1,125 +1,184 @@
-// Función para realizar la consulta a Flask (proxy de Overpass API)
-async function fetchImpactData(lat, lon, squareSize) {
-    const apiUrl = 'https://overpass-api.de/api/interpreter';  // URL del endpoint en Flask
+// Function to query Overpass API using sideLength (in meters)
+async function fetchImpactData(lat, lon, sideLength) {
+  const overpassUrl = "https://overpass-api.de/api/interpreter";
 
-    const latDiff = squareSize / 111320; // Aproximadamente 111.32 km por grado de latitud
-    const lonDiff = squareSize / (40008000/360);    // Aproximadamente 111.32 km por grado de longitud
+  // Convert lat and lon to numbers to ensure no errors
+  lat = parseFloat(lat);
+  lon = parseFloat(lon);
 
-    const minLat = lat - latDiff / 2;
-    const maxLat = lat + latDiff / 2;
-    const minLon = lon - lonDiff / 2;
-    const maxLon = lon + lonDiff / 2;
+  if (isNaN(lat) || isNaN(lon)) {
+    throw new Error("Invalid coordinates.");
+  }
 
-    const query = `
-    [out:json];
+  // Ensure sideLength is a positive number and limit to reasonable range (100m to 100km)
+  sideLength = Math.min(100000, Math.max(100, parseFloat(sideLength) || 5000));
+  
+  console.log(`Querying Overpass with radius: ${(sideLength/1000).toFixed(2)} km`);
+
+  // Calcular las coordenadas del área cuadrada
+  const lat1 = lat - sideLength / 2 / 111320;
+  const lon1 =
+    lon - sideLength / 2 / (111320 * Math.cos((lat * Math.PI) / 180));
+  const lat2 = lat + sideLength / 2 / 111320;
+  const lon2 =
+    lon + sideLength / 2 / (111320 * Math.cos((lat * Math.PI) / 180));
+
+  // Create Overpass query (nodes, ways, relations) with population data
+  const overpassQuery = `
+    [out:json][timeout:25];
     (
-      node["building"](around:${lat},${lon},${squareSize}); 
-      way["building"](around:${lat},${lon},${squareSize});
-      relation["building"](around:${lat},${lon},${squareSize});
-      
-      node["amenity"](around:${lat},${lon},${squareSize});
-      way["amenity"](around:${lat},${lon},${squareSize});
-      relation["amenity"](around:${lat},${lon},${squareSize});
-      
-      node["population"](around:${lat},${lon},${squareSize});
+      node["building"](${lat1},${lon1},${lat2},${lon2});
+      way["building"](${lat1},${lon1},${lat2},${lon2});
+      node["amenity"](${lat1},${lon1},${lat2},${lon2});
+      way["amenity"](${lat1},${lon1},${lat2},${lon2});
+      node["population"](${lat1},${lon1},${lat2},${lon2});
+      way["population"](${lat1},${lon1},${lat2},${lon2});
+      relation["population"](${lat1},${lon1},${lat2},${lon2});
+      node["place"~"city|town|village|suburb|neighbourhood"](${lat1},${lon1},${lat2},${lon2});
+      way["place"~"city|town|village|suburb|neighbourhood"](${lat1},${lon1},${lat2},${lon2});
     );
     out body;
     >;
     out skel qt;
   `;
 
-  const response = await fetch(`${apiUrl}?lat=${lat}&lon=${lon}&squareSize=${squareSize}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
+  // Realizar la solicitud a la API de Overpass
+  const response = await fetch(
+    `${overpassUrl}?data=${encodeURIComponent(overpassQuery)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Error fetching data from Overpass API: ${response.statusText}`
+    );
+  }
+
+  const data = await response.json();
+  console.log("Datos recibidos de Overpass API:", data);
+
+  // Verify if there is data
+  if (!data || !data.elements || data.elements.length === 0) {
+    console.warn(
+      "No elements received from Overpass API for the provided coordinates. Using default population density."
+    );
+    return { buildings: [], amenities: [], totalPopulation: 0, populatedAreas: [] };
+  }
+
+  // IMPORTANTE: Procesar los datos aquí directamente
+  return processImpactData(data);
+}
+
+// Function to process data received from Overpass API
+function processImpactData(data) {
+  const buildings = [];
+  const amenities = [];
+  let totalPopulation = 0;
+  let populatedAreas = [];
+
+  if (!data || !data.elements || data.elements.length === 0) {
+    console.error("No elements received from Overpass API.");
+    return { buildings, amenities, totalPopulation, populatedAreas };
+  }
+
+  console.log("Total elements to process:", data.elements.length);
+
+  // Process each received element
+  data.elements.forEach((element) => {
+    // Get coordinates based on element type
+    let coordinates;
+    if (element.lat && element.lon) {
+      coordinates = [element.lon, element.lat]; // GeoJSON uses [lon, lat]
+    } else if (element.geometry && element.geometry.coordinates) {
+      coordinates = element.geometry.coordinates;
+    } else {
+      coordinates = null;
+    }
+
+    const item = {
+      id: element.id,
+      type: element.type,
+      coordinates,
+      tags: element.tags || {},
+    };
+
+    // Filter buildings
+    if (element.tags && element.tags.building) {
+      buildings.push(item);
+    }
+
+    // Filter amenities
+    if (element.tags && element.tags.amenity) {
+      // Classify criticality of amenity
+      const amenityType = element.tags.amenity;
+      const name = element.tags.name || amenityType;
+      let criticality = 'LOW';
+      
+      // CRITICAL: Emergency services and healthcare
+      if (['hospital', 'clinic', 'doctors', 'fire_station', 'police'].includes(amenityType)) {
+        criticality = 'CRITICAL';
+      }
+      // HIGH: Essential services
+      else if (['school', 'university', 'fuel', 'pharmacy', 'shelter'].includes(amenityType)) {
+        criticality = 'HIGH';
+      }
+      // MEDIUM: Important infrastructure
+      else if (['townhall', 'post_office', 'bank', 'library', 'community_centre'].includes(amenityType)) {
+        criticality = 'MEDIUM';
+      }
+      
+      amenities.push({
+        ...item,
+        type: amenityType,
+        name: name,
+        criticality: criticality
+      });
+    }
+
+    // Extract population from tags
+    if (element.tags && element.tags.population) {
+      const pop = parseInt(element.tags.population);
+      if (!isNaN(pop) && pop > 0) {
+        totalPopulation += pop;
+        populatedAreas.push({
+          ...item,
+          population: pop
+        });
+      }
+    }
+
+    // Extract population from place tags (cities, towns, villages)
+    if (element.tags && element.tags.place) {
+      const placeTypes = ['city', 'town', 'village', 'suburb', 'neighbourhood'];
+      if (placeTypes.includes(element.tags.place)) {
+        if (element.tags.population) {
+          const pop = parseInt(element.tags.population);
+          if (!isNaN(pop) && pop > 0) {
+            totalPopulation += pop;
+            populatedAreas.push({
+              ...item,
+              population: pop,
+              placeName: element.tags.name || 'Unknown'
+            });
+          }
+        }
+      }
     }
   });
 
-  const data = await response.json();
-  return data;
+  console.log("Buildings found:", buildings.length);
+  console.log("Amenities found:", amenities.length);
+  console.log("Total population:", totalPopulation);
+  console.log("Populated areas found:", populatedAreas.length);
 
-
-
-// Función para procesar la respuesta de Overpass y extraer los datos de infraestructura y población
-function processImpactData(data) {
-    const buildings = [];
-    const amenities = [];
-    const populations = [];
-    
-    if (data && data.elements) {
-        data.elements.forEach(element => {
-            // Procesar edificios (casas, escuelas, hospitales, etc.)
-            if (element.type === 'node' && element.tags && element.tags.building) {
-                const building = {
-                    id: element.id,
-                    type: element.type,
-                    coordinates: [element.lat, element.lon]
-                };
-                buildings.push(building);
-            } else if (element.type === 'way' && element.tags && element.tags.building) {
-                const building = {
-                    id: element.id,
-                    type: element.type,
-                    coordinates: getWayCoordinates(element, data.elements)
-                };
-                buildings.push(building);
-            }
-
-            // Procesar infraestructura (hospitales, escuelas, universidades, centros públicos, etc.)
-            if (element.type === 'node' && element.tags && element.tags.amenity) {
-                const amenity = {
-                    id: element.id,
-                    type: element.type,
-                    amenity: element.tags.amenity,
-                    coordinates: [element.lat, element.lon]
-                };
-                amenities.push(amenity);
-            } else if (element.type === 'way' && element.tags && element.tags.amenity) {
-                const amenity = {
-                    id: element.id,
-                    type: element.type,
-                    amenity: element.tags.amenity,
-                    coordinates: getWayCoordinates(element, data.elements)
-                };
-                amenities.push(amenity);
-            }
-
-            // Procesar población (ciudades, pueblos, aldeas)
-            if (element.type === 'node' && element.tags && element.tags.population) {
-                const population = {
-                    id: element.id,
-                    type: element.type,
-                    population: element.tags.population,
-                    coordinates: [element.lat, element.lon]
-                };
-                populations.push(population);
-            }
-        });
-    }
-
-    return { buildings, amenities, populations };
+  return { buildings, amenities, totalPopulation, populatedAreas };
 }
 
-// Función auxiliar para obtener las coordenadas de un 'way' (línea o área)
-function getWayCoordinates(way, elements) {
-    return way.nodes.map(nodeId => {
-        const node = elements.find(n => n.id === nodeId); // Buscar el nodo en los elementos
-        return [node.lat, node.lon]; // Retornar las coordenadas del nodo
-    });
-}
-
-// Función para mostrar los datos en la consola (sin visualización en el mapa)
-async function fetchAndDisplayImpactData(lat, lon, radius) {
-    // Consultar los datos de infraestructura y población cercanos a las coordenadas seleccionadas
-    const data = await fetchImpactData(lat, lon, radius);
-
-    // Procesar los datos obtenidos
-    const { buildings, amenities, populations } = processImpactData(data);
-
-    // Mostrar los datos de edificios, infraestructura y población en la consola
-    console.log('Edificios cercanos:', buildings);
-    console.log('Infraestructura cercanas (hospitales, escuelas, etc.):', amenities);
-    console.log('Población cercana:', populations);
-}
-
-}
+// Exponer las funciones globalmente
+window.fetchImpactData = fetchImpactData;
+window.processImpactData = processImpactData;
