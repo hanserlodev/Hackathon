@@ -356,7 +356,7 @@ class MeteorSimulation {
 
     const { lat, lon, label } = this.impactCoordinates;
     info.innerHTML = `
-        <h4>📍 Ubicación Seleccionada / Selected Location</h4>
+        <h4>📍 Selected Location</h4>
         <p><strong>Descripción:</strong> ${label}</p>
         <p><strong>Latitud:</strong> ${lat.toFixed(2)}°</p>
         <p><strong>Longitud:</strong> ${lon.toFixed(2)}°</p>

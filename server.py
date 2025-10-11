@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Simplified Flask server for Meteorite Impact Simulator
 Production-ready for Render deployment
@@ -91,7 +89,7 @@ def get_nasa_data():
         if end_date:
             params['end_date'] = end_date
         
-        # Realizar consulta
+        #   Make request to NASA
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         
@@ -108,9 +106,9 @@ def geocoding():
         
         query = request.args.get('q')
         if not query:
-            return jsonify({'error': 'Parámetro q requerido'}), 400
+            return jsonify({'error': 'Parameter q required'}), 400
         
-        # Usar OpenStreetMap Nominatim
+        # Use Nominatim API for geocoding
         url = "https://nominatim.openstreetmap.org/search"
         params = {
             'format': 'json',
@@ -130,21 +128,21 @@ def geocoding():
 def nasa_sbdb_proxy():
     """Proxy para NASA Small-Body Database API"""
     try:
-        # Obtener parámetros
+        # Get query parameters
         sstr = request.args.get('sstr')
         full_prec = request.args.get('full-prec', 'true')
         
         if not sstr:
             return jsonify({'error': 'Parameter sstr required'}), 400
         
-        # Construir URL
+        # Make URL
         url = 'https://ssd-api.jpl.nasa.gov/sbdb.api'
         params = {
             'sstr': sstr,
             'full-prec': full_prec
         }
         
-        # Realizar consulta a NASA
+        # Make request to NASA
         response = requests.get(url, params=params, timeout=30)
         response.raise_for_status()
         
@@ -157,16 +155,16 @@ def nasa_sbdb_proxy():
 def nasa_sbdb_query_proxy():
     """Proxy para NASA SBDB Query API"""
     try:
-        # Obtener body de la solicitud
+        # Get JSON body
         query_data = request.get_json()
         
         if not query_data:
             return jsonify({'error': 'Query data required'}), 400
         
-        # URL de la API
+        # API URL
         url = 'https://ssd-api.jpl.nasa.gov/sbdb_query.api'
         
-        # Realizar consulta a NASA
+        # Make POST request to NASA
         response = requests.post(url, json=query_data, timeout=30)
         response.raise_for_status()
         
@@ -181,13 +179,13 @@ def calculate_impact():
     try:
         data = request.get_json()
         
-        # Validar datos de entrada
+        # Validate data input
         required_fields = ['diameter', 'velocity', 'density']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Campo requerido faltante: {field}'}), 400
-        
-        # Simular cálculos (en una implementación real, usarías las funciones de JavaScript)
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        # Simulated calculations
         diameter = float(data['diameter'])
         velocity = float(data['velocity'])
         density = data['density']
@@ -266,12 +264,12 @@ OVERPASS_URL = "http://overpass-api.de/api/interpreter"
 @app.route('/overpass', methods=['GET'])
 def overpass():
     try:
-        # Obtener las coordenadas de la solicitud
+        # Get request coordinates
         lat = request.args.get('lat', type=float)
         lon = request.args.get('lon', type=float)
-        radius = request.args.get('radius', default=1000, type=int)  # Radio en metros (por defecto 1 km)
+        radius = request.args.get('radius', default=1000, type=int)  # Radius in meters (default 1 km)
 
-        # Consulta Overpass API para obtener datos dentro del radio especificado
+        # Overpass API query to get data within the specified radius
         overpass_query = f"""
         [out:json];
         (
@@ -283,11 +281,11 @@ def overpass():
         """
         response = requests.get(OVERPASS_URL, params={'data': overpass_query})
 
-        # Manejar la respuesta de Overpass
+        # Handle Overpass response
         if response.status_code == 200:
             return jsonify(response.json())
         else:
-            return jsonify({"error": "Error al obtener datos de Overpass API"}), 500
+            return jsonify({"error": "Error fetching data from Overpass API"}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -12,10 +12,12 @@ async function fetchImpactData(lat, lon, sideLength) {
 
   // Ensure sideLength is a positive number and limit to reasonable range (100m to 100km)
   sideLength = Math.min(100000, Math.max(100, parseFloat(sideLength) || 5000));
-  
-  console.log(`Querying Overpass with radius: ${(sideLength/1000).toFixed(2)} km`);
 
-  // Calcular las coordenadas del área cuadrada
+  console.log(
+    `Querying Overpass with radius: ${(sideLength / 1000).toFixed(2)} km`
+  );
+
+  // Calculate the coordinates of the square area
   const lat1 = lat - sideLength / 2 / 111320;
   const lon1 =
     lon - sideLength / 2 / (111320 * Math.cos((lat * Math.PI) / 180));
@@ -42,7 +44,7 @@ async function fetchImpactData(lat, lon, sideLength) {
     out skel qt;
   `;
 
-  // Realizar la solicitud a la API de Overpass
+  // Make the request to Overpass API
   const response = await fetch(
     `${overpassUrl}?data=${encodeURIComponent(overpassQuery)}`,
     {
@@ -67,10 +69,15 @@ async function fetchImpactData(lat, lon, sideLength) {
     console.warn(
       "No elements received from Overpass API for the provided coordinates. Using default population density."
     );
-    return { buildings: [], amenities: [], totalPopulation: 0, populatedAreas: [] };
+    return {
+      buildings: [],
+      amenities: [],
+      totalPopulation: 0,
+      populatedAreas: [],
+    };
   }
 
-  // IMPORTANTE: Procesar los datos aquí directamente
+  // IMPORTANT: Process the data here directly
   return processImpactData(data);
 }
 
@@ -117,26 +124,42 @@ function processImpactData(data) {
       // Classify criticality of amenity
       const amenityType = element.tags.amenity;
       const name = element.tags.name || amenityType;
-      let criticality = 'LOW';
-      
+      let criticality = "LOW";
+
       // CRITICAL: Emergency services and healthcare
-      if (['hospital', 'clinic', 'doctors', 'fire_station', 'police'].includes(amenityType)) {
-        criticality = 'CRITICAL';
+      if (
+        ["hospital", "clinic", "doctors", "fire_station", "police"].includes(
+          amenityType
+        )
+      ) {
+        criticality = "CRITICAL";
       }
       // HIGH: Essential services
-      else if (['school', 'university', 'fuel', 'pharmacy', 'shelter'].includes(amenityType)) {
-        criticality = 'HIGH';
+      else if (
+        ["school", "university", "fuel", "pharmacy", "shelter"].includes(
+          amenityType
+        )
+      ) {
+        criticality = "HIGH";
       }
       // MEDIUM: Important infrastructure
-      else if (['townhall', 'post_office', 'bank', 'library', 'community_centre'].includes(amenityType)) {
-        criticality = 'MEDIUM';
+      else if (
+        [
+          "townhall",
+          "post_office",
+          "bank",
+          "library",
+          "community_centre",
+        ].includes(amenityType)
+      ) {
+        criticality = "MEDIUM";
       }
-      
+
       amenities.push({
         ...item,
         type: amenityType,
         name: name,
-        criticality: criticality
+        criticality: criticality,
       });
     }
 
@@ -147,14 +170,14 @@ function processImpactData(data) {
         totalPopulation += pop;
         populatedAreas.push({
           ...item,
-          population: pop
+          population: pop,
         });
       }
     }
 
     // Extract population from place tags (cities, towns, villages)
     if (element.tags && element.tags.place) {
-      const placeTypes = ['city', 'town', 'village', 'suburb', 'neighbourhood'];
+      const placeTypes = ["city", "town", "village", "suburb", "neighbourhood"];
       if (placeTypes.includes(element.tags.place)) {
         if (element.tags.population) {
           const pop = parseInt(element.tags.population);
@@ -163,7 +186,7 @@ function processImpactData(data) {
             populatedAreas.push({
               ...item,
               population: pop,
-              placeName: element.tags.name || 'Unknown'
+              placeName: element.tags.name || "Unknown",
             });
           }
         }
@@ -171,14 +194,9 @@ function processImpactData(data) {
     }
   });
 
-  console.log("Buildings found:", buildings.length);
-  console.log("Amenities found:", amenities.length);
-  console.log("Total population:", totalPopulation);
-  console.log("Populated areas found:", populatedAreas.length);
-
   return { buildings, amenities, totalPopulation, populatedAreas };
 }
 
-// Exponer las funciones globalmente
+// Expose functions globally
 window.fetchImpactData = fetchImpactData;
 window.processImpactData = processImpactData;

@@ -9,8 +9,10 @@
  * - NASA NEO Basics: https://cneos.jpl.nasa.gov/about/neo_groups.html
  */
 
+// The goal is to have a database of well-known asteroids with complete data, but the correct thing to do is to use NASA data.
+
 export const KNOWN_ASTEROIDS = {
-    // ============ POTENTIALLY HAZARDOUS ASTEROIDS (PHAs) ============
+    // POTENTIALLY HAZARDOUS ASTEROIDS (PHAs) 
     
     '99942': { // Apophis - Most famous PHA
         name: '99942 Apophis',

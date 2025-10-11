@@ -133,13 +133,13 @@ class EarthMap2D {
         }
 
         this.marker.classList.remove('impact-marker-active');
-        // Forzar reinicio de animación / Force animation restart.
+        // Force animation restart.
         void this.marker.offsetWidth;
         this.marker.classList.add('impact-marker-active');
     }
 
     animateImpact() {
-        // Simplemente reactiva la animación del marcador / Reactivate marker animation only.
+        // Reactivate marker animation only.
         this.activateMarker();
     }
 

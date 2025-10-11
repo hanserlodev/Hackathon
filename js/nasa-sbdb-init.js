@@ -13,9 +13,6 @@ window.loadedAsteroids = new Map();
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initializing NASA Small-Body Database integration...');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
     // Show loading indicator
     const meteorSelect = document.getElementById('meteor-select');
     if (meteorSelect) {
@@ -28,11 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
         // Load notable asteroids from NASA SBDB
-        console.log('📊 Fetching real asteroids from NASA SBDB API...');
         const asteroids = await NASASBDB.getNotableAsteroids();
         
         console.log(`✅ Successfully loaded ${asteroids.length} asteroids from NASA SBDB`);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         // Store asteroids for later use
         asteroids.forEach(asteroid => {
@@ -41,9 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log(`    → Diameter: ${asteroid.physical.diameter.toFixed(2)} km`);
             console.log(`    → Orbit: a=${asteroid.orbit.semiMajorAxis.toFixed(3)} AU, e=${asteroid.orbit.eccentricity.toFixed(3)}`);
         });
-        
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
+
         // Populate selector with real NASA data
         if (meteorSelect) {
             // DO NOT clear innerHTML - NEOs are already there from nasa-api.js
@@ -107,15 +100,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`  Inclination: ${apophis.orbit.inclination.toFixed(2)}°`);
         console.log(`  Estimated Impact Velocity: ${NASASBDB.estimateImpactVelocity(apophis.orbit).toFixed(1)} km/s`);
         
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('✅ NASA SBDB Integration Complete!');
-        console.log('💡 Select an asteroid and click "View Orbital Data" to see details');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
     } catch (error) {
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.error('❌ Error initializing NASA SBDB:', error);
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         if (meteorSelect) {
             meteorSelect.innerHTML = '<option value="manual">Custom Impact Parameters (NASA API Error)</option>';
@@ -180,26 +166,21 @@ async function showOrbitDataModal() {
     document.body.appendChild(loadingModal);
     
     try {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log(`🔍 Fetching orbital data for: ${selectedValue}`);
-        console.log(`📡 Making request to NASA SBDB API...`);
-        
+
         // Check if we have cached data
         let data = window.loadedAsteroids.get(selectedValue);
         
         if (!data) {
-            console.log(`   Cache miss - fetching from API...`);
             data = await NASASBDB.searchSmallBody(selectedValue);
             window.loadedAsteroids.set(selectedValue, data);
         } else {
             console.log(`   ✓ Using cached data`);
         }
         
-        console.log(`✅ Data received successfully`);
         console.log(`   Type: ${data.type}`);
         console.log(`   NEO: ${data.neo ? 'Yes' : 'No'}`);
         console.log(`   PHA: ${data.pha ? 'Yes (Potentially Hazardous)' : 'No'}`);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         // Remove loading modal
         loadingModal.remove();
@@ -335,9 +316,7 @@ async function showOrbitDataModal() {
         });
         
     } catch (error) {
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.error('❌ Error fetching orbital data:', error);
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         loadingModal.remove();
         
@@ -348,7 +327,6 @@ async function showOrbitDataModal() {
 // Apply orbital data to simulation
 window.applyOrbitDataToSimulation = async function(name) {
     try {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log(`✅ Applying real NASA data to simulation: ${name}`);
         
         let data = window.loadedAsteroids.get(name);
@@ -380,8 +358,7 @@ window.applyOrbitDataToSimulation = async function(name) {
         }
         
         console.log(`✅ Simulation parameters updated successfully`);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
+                
         // Close modal
         const modal = document.querySelector('.orbit-modal');
         if (modal) {
