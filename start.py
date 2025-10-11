@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Quick start script for Meteorite Impact Simulator
 """
@@ -21,13 +19,6 @@ def check_dependencies():
     except ImportError:
         print("❌ Flask not installed. Running: pip install flask")
         subprocess.run([sys.executable, "-m", "pip", "install", "flask"])
-    
-    try:
-        import pygame # type: ignore
-        print("✅ Pygame installed")
-    except ImportError:
-        print("❌ Pygame not installed. Running: pip install pygame")
-        subprocess.run([sys.executable, "-m", "pip", "install", "pygame"])
     
     try:
         import requests # type: ignore
@@ -75,14 +66,7 @@ def main():
     print("2. Browser will open automatically")
     print("3. To stop server, press Ctrl+C")
     print("4. 2D simulation will launch when you start a simulation")
-    
-    print("\n🎮 2D View Controls:")
-    print("- SPACE: Pause/Resume")
-    print("- D: Show/Hide data")
-    print("- E: Show/Hide effects")
-    print("- R: Reset")
-    print("- ESC: Exit")
-    
+
     input("\n⏎ Press Enter to continue...")
     
     # Start browser in separate thread
@@ -93,5 +77,4 @@ def main():
     # Start server
     start_server()
 
-if __name__ == "__main__":
-    main()
+main()

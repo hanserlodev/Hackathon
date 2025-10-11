@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Servidor Flask para integrar la simulación 2D con la aplicación web / Flask server integrating the 2D simulation with the web application.
+Flask server integrating the 2D simulation with the web application.
 """
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
-import subprocess
 import os
-import threading
-import time
 import requests
 from flask_cors import CORS
 from geopy.geocoders import Nominatim
@@ -17,57 +12,9 @@ from geopy.geocoders import Nominatim
 app = Flask(__name__)
 CORS(app)
 
-# Configuración / Configuration.
-PYGAME_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), 'meteor_impact_2d.py')
 # Guardar archivo de datos en el directorio del proyecto / Save data file in the project directory.
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SIMULATION_DATA_FILE = os.path.join(PROJECT_DIR, 'simulation_data.json')
 
-class SimulationManager:
-    def __init__(self):
-        self.current_process = None
-        self.simulation_data = None
-    
-    def start_simulation(self, data):
-        """Iniciar simulación 2D con datos específicos"""
-        try:
-            # Guardar datos en archivo JSON / Save data to JSON file.
-            with open(SIMULATION_DATA_FILE, 'w') as f:
-                json.dump(data, f)
-            
-            # Terminar simulación anterior si existe / Terminate previous simulation if it exists.
-            if self.current_process:
-                self.current_process.terminate()
-                self.current_process.wait()
-            
-            # Iniciar nueva simulación / Start new simulation.
-            self.current_process = subprocess.Popen([
-                'python', PYGAME_SCRIPT_PATH,
-                '--data-file', SIMULATION_DATA_FILE
-            ])
-            
-            self.simulation_data = data
-            return True
-            
-        except Exception as e:
-            print(f"Error al iniciar simulación: {e}")
-            return False
-    
-    def stop_simulation(self):
-        """Detener simulación actual"""
-        if self.current_process:
-            self.current_process.terminate()
-            self.current_process.wait()
-            self.current_process = None
-    
-    def is_running(self):
-        """Verificar si la simulación está ejecutándose"""
-        if self.current_process:
-            return self.current_process.poll() is None
-        return False
-
-# Instancia global del administrador de simulación / Global simulation manager instance.
-sim_manager = SimulationManager()
 
 @app.route('/')
 def index():
@@ -82,61 +29,6 @@ def static_files(filename):
     # Obtener el directorio padre (donde están los archivos HTML/CSS/JS) / Get the directory containing HTML/CSS/JS files.
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return send_from_directory(parent_dir, filename)
-
-@app.route('/api/simulation/start', methods=['POST'])
-def start_simulation():
-    """Iniciar simulación 2D"""
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'error': 'No se proporcionaron datos'}), 400
-        
-        # Validar datos requeridos / Validate required data.
-        required_fields = ['effects']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'Campo requerido faltante: {field}'}), 400
-        
-        # Iniciar simulación / Start simulation.
-        success = sim_manager.start_simulation(data)
-        
-        if success:
-            return jsonify({
-                'status': 'success',
-                'message': 'Simulación 2D iniciada correctamente',
-                'pid': sim_manager.current_process.pid if sim_manager.current_process else None
-            })
-        else:
-            return jsonify({'error': 'No se pudo iniciar la simulación'}), 500
-            
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/simulation/stop', methods=['POST'])
-def stop_simulation():
-    """Detener simulación 2D"""
-    try:
-        sim_manager.stop_simulation()
-        return jsonify({
-            'status': 'success',
-            'message': 'Simulación detenida correctamente'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/simulation/status', methods=['GET'])
-def simulation_status():
-    """Obtener estado de la simulación"""
-    try:
-        return jsonify({
-            'running': sim_manager.is_running(),
-            'data': sim_manager.simulation_data
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 
 @app.route('/api/overpass', methods=['GET','POST'])
 def get_overpass_data():
@@ -321,16 +213,10 @@ def internal_error(error):
     """Manejar errores 500"""
     return jsonify({'error': 'Error interno del servidor'}), 500
 
-def cleanup_on_exit():
-    """Limpiar recursos al salir"""
-    sim_manager.stop_simulation()
-    if os.path.exists(SIMULATION_DATA_FILE):
-        os.remove(SIMULATION_DATA_FILE)
 
 if __name__ == '__main__':
-    import atexit
+    import atexit    
     atexit.register(cleanup_on_exit)
-    
     print("🌍 Iniciando Simulador de Impacto de Meteoritos")
     print("📡 Servidor Flask ejecutándose en http://localhost:5000")
     print("🎮 La simulación 2D se abrirá automáticamente cuando se inicie una simulación")
