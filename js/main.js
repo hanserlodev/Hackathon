@@ -23,22 +23,24 @@ document.addEventListener("DOMContentLoaded", () => {
   meteorSelect.addEventListener("change", async (event) => {
     const selectedValue = event.target.value;
     const selectedOption = event.target.options[event.target.selectedIndex];
-    
+
     // Don't process if 'manual' is selected
     if (selectedValue === "manual") {
       console.log("Manual configuration mode selected");
       return;
     }
-    
+
     let diameter, velocityKmS;
-    
+
     // Check if it's a famous meteorite (has data attributes)
     if (selectedOption.dataset.size && selectedOption.dataset.velocity) {
       diameter = parseFloat(selectedOption.dataset.size);
       velocityKmS = parseFloat(selectedOption.dataset.velocity);
-      
+
       console.log(`Famous meteorite selected: ${selectedValue}`);
-      console.log(`Using stored values - Diameter: ${diameter}m, Velocity: ${velocityKmS} km/s`);
+      console.log(
+        `Using stored values - Diameter: ${diameter}m, Velocity: ${velocityKmS} km/s`
+      );
     } else {
       // It's a NEO from the API
       const neoData = await dataProvider.getNEOData(start_date, end_date);
@@ -52,63 +54,80 @@ document.addEventListener("DOMContentLoaded", () => {
       diameter = selectedNEO.size;
       // Convert velocity from km/h to km/s
       velocityKmS = selectedNEO.velocity / 3600;
-      
+
       console.log(`NEO meteorite selected: ${selectedValue}`);
-      console.log(`API values - Diameter: ${diameter.toFixed(2)}m, Velocity: ${velocityKmS.toFixed(2)} km/s`);
+      console.log(
+        `API values - Diameter: ${diameter.toFixed(
+          2
+        )}m, Velocity: ${velocityKmS.toFixed(2)} km/s`
+      );
     }
-    
+
     // Update sliders with meteorite data
     const sizeSlider = document.getElementById("meteor-size");
     const velocitySlider = document.getElementById("meteor-velocity");
     const densitySelect = document.getElementById("meteor-density");
-    
+
     if (sizeSlider) {
       // Ensure diameter is within slider range
       const clampedDiameter = Math.min(Math.max(diameter, 10), 40000);
       sizeSlider.value = Math.round(clampedDiameter);
-      
-      const formatted = clampedDiameter >= 1000 
-        ? `${(clampedDiameter/1000).toFixed(1)} km` 
-        : `${Math.round(clampedDiameter)}m`;
+
+      const formatted =
+        clampedDiameter >= 1000
+          ? `${(clampedDiameter / 1000).toFixed(1)} km`
+          : `${Math.round(clampedDiameter)}m`;
       document.getElementById("size-value").textContent = formatted;
     }
-    
+
     if (velocitySlider) {
       // Ensure velocity is within slider range
       const clampedVelocity = Math.min(Math.max(velocityKmS, 11), 1000);
       velocitySlider.value = Math.round(clampedVelocity);
-      document.getElementById("velocity-value").textContent = `${Math.round(clampedVelocity)} km/s`;
+      document.getElementById("velocity-value").textContent = `${Math.round(
+        clampedVelocity
+      )} km/s`;
     }
-    
+
     // Update material density based on asteroid type
     if (densitySelect) {
       // Try to determine asteroid type from name or properties
       const asteroidName = selectedValue.toLowerCase();
-      let densityType = 'stone'; // Default
-      
+      let densityType = "stone"; // Default
+
       // C-type asteroids (carbonaceous) - dark, carbon-rich
-      if (asteroidName.includes('bennu') || asteroidName.includes('ryugu') || 
-          asteroidName.includes('1999 jm8') || asteroidName.includes('1999 rq36')) {
-        densityType = 'carbon';
+      if (
+        asteroidName.includes("bennu") ||
+        asteroidName.includes("ryugu") ||
+        asteroidName.includes("1999 jm8") ||
+        asteroidName.includes("1999 rq36")
+      ) {
+        densityType = "carbon";
       }
       // M-type asteroids (metallic) - metal-rich
-      else if (asteroidName.includes('psyche') || asteroidName.includes('kleopatra')) {
-        densityType = 'iron';
+      else if (
+        asteroidName.includes("psyche") ||
+        asteroidName.includes("kleopatra")
+      ) {
+        densityType = "iron";
       }
       // Comets and icy bodies
-      else if (asteroidName.includes('comet') || asteroidName.includes('halley') || 
-               selectedOption.dataset.type === 'comet') {
-        densityType = 'comet';
+      else if (
+        asteroidName.includes("comet") ||
+        asteroidName.includes("halley") ||
+        selectedOption.dataset.type === "comet"
+      ) {
+        densityType = "comet";
       }
       // S-type asteroids (stony) - most common, default
       else {
-        densityType = 'stone';
+        densityType = "stone";
       }
-      
+
       densitySelect.value = densityType;
       console.log(`Material density set to: ${densityType}`);
     }
-    
+
     console.log(`Sliders updated successfully`);
   });
 });
@@ -125,7 +144,7 @@ window.addEventListener("load", async () => {
     console.log("Map already initialized, using existing instance");
     return;
   }
-  
+
   // Check if Leaflet already initialized this container
   if (mapContainer._leaflet_id) {
     console.log("Leaflet already initialized this container");
@@ -134,7 +153,8 @@ window.addEventListener("load", async () => {
 
   const map = L.map("map").setView([39.7392, -104.9903], 4);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
   // Store map globally to prevent re-initialization
@@ -167,16 +187,18 @@ window.addEventListener("load", async () => {
 
     // Retrieve meteorite parameters and location
     const meteorDetails = await getMeteorDetails(meteorSelect);
-    const [lat, lon] = locationInput.split(',').map(coord => parseFloat(coord.trim()));
+    const [lat, lon] = locationInput
+      .split(",")
+      .map((coord) => parseFloat(coord.trim()));
 
     // Fetch infrastructure and population data from Overpass
-    const overpassData = await fetchImpactData(lat, lon, 5000);  // Assuming 5 km radius
+    const overpassData = await fetchImpactData(lat, lon, 5000); // Assuming 5 km radius
     if (overpassData) {
       const { buildings, amenities, populations } = overpassData;
 
       // Calculate population density
       const areaKm2 = Math.pow(5000 / 1000, 2); // Convert 5000m side to km²
-      const populationDensity = areaKm2 > 0 ? (populations.length / areaKm2) : 0; // Simple density calculation
+      const populationDensity = areaKm2 > 0 ? populations.length / areaKm2 : 0; // Simple density calculation
 
       // Instantiate ImpactCalculations
       const impactCalculations = new ImpactCalculations();
@@ -191,16 +213,19 @@ window.addEventListener("load", async () => {
       );
 
       // Calculate destruction radius
-      const destructionRadius = impactCalculations.calculateTotalDestructionZone(
-        results.energy,
-        results.energyMegatons
-      );
+      const destructionRadius =
+        impactCalculations.calculateTotalDestructionZone(
+          results.energy,
+          results.energyMegatons
+        );
 
       // Update UI with calculated results
       updateImpactDataUI(results);
 
       // Display destruction radius in UI
-      document.getElementById("destruction-zone").textContent = `${destructionRadius.toFixed(2)} km`;
+      document.getElementById(
+        "destruction-zone"
+      ).textContent = `${destructionRadius.toFixed(2)} km`;
     } else {
       console.error("No data received from Overpass API.");
     }
@@ -215,15 +240,31 @@ window.addEventListener("load", async () => {
   // Function to update simulation results in UI
   function updateImpactDataUI(results) {
     // Update UI with calculated data
-    document.getElementById("energy-value").textContent = `${results.energyMegatons.toFixed(3)} MT`;
-    document.getElementById("crater-diameter").textContent = `${results.craterDiameter.toFixed(2)} km`;
-    document.getElementById("casualties").textContent = `${results.casualties.fatalities} fatalities / ${results.casualties.injuries} injuries`;
-    document.getElementById("destruction-zone").textContent = `${results.radiusOfDestruction.toFixed(2)} km`;
+    document.getElementById(
+      "energy-value"
+    ).textContent = `${results.energyMegatons.toFixed(3)} MT`;
+    document.getElementById(
+      "crater-diameter"
+    ).textContent = `${results.craterDiameter.toFixed(2)} km`;
+    document.getElementById(
+      "casualties"
+    ).textContent = `${results.casualties.fatalities} fatalities / ${results.casualties.injuries} injuries`;
+    document.getElementById(
+      "destruction-zone"
+    ).textContent = `${results.radiusOfDestruction.toFixed(2)} km`;
 
     // Secondary effects
-    document.getElementById("earthquake-magnitude").textContent = `Magnitude: ${results.impactClassification.level}`;
-    document.getElementById("tsunami-height").textContent = `Height: ${results.impactClassification.level}`;
-    document.getElementById("fire-radius").textContent = `${results.fireRadius.toFixed(2)} km`;
-    document.getElementById("dust-radius").textContent = `${results.dustCloudRadius.toFixed(2)} km`;
+    document.getElementById(
+      "earthquake-magnitude"
+    ).textContent = `Magnitude: ${results.impactClassification.level}`;
+    document.getElementById(
+      "tsunami-height"
+    ).textContent = `Height: ${results.impactClassification.level}`;
+    document.getElementById(
+      "fire-radius"
+    ).textContent = `${results.fireRadius.toFixed(2)} km`;
+    document.getElementById(
+      "dust-radius"
+    ).textContent = `${results.dustCloudRadius.toFixed(2)} km`;
   }
 });
