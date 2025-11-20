@@ -22,7 +22,7 @@ function updateLocationInfo(lat, lon) {
   }
 
   // Update the details in the HTML
-  const locationInfo = document.getElementById('location-info');
+  const locationInfo = document.getElementById("location-info");
   locationInfo.innerHTML = `
     <h4>📍 Ubicación Seleccionada</h4>
     <p><strong>Latitud:</strong> ${lat.toFixed(2)}°</p>
@@ -45,15 +45,16 @@ map.on("click", async function (event) {
   const sideLength = 10000; // Impact area size in meters (adjustable)
 
   // Call Overpass function to get infrastructure and population data
-  const { buildings, amenities, totalPopulation, populatedAreas } = await fetchImpactData(lat, lon, sideLength); // Make sure fetchImpactData is in overpass.js
-    console.log("Nearby buildings:", buildings);
-    console.log("Nearby infrastructure:", amenities);
-    console.log("Total population:", totalPopulation);
-    console.log("Populated areas:", populatedAreas);
+  const { buildings, amenities, totalPopulation, populatedAreas } =
+    await fetchImpactData(lat, lon, sideLength); // Make sure fetchImpactData is in overpass.js
+  console.log("Nearby buildings:", buildings);
+  console.log("Nearby infrastructure:", amenities);
+  console.log("Total population:", totalPopulation);
+  console.log("Populated areas:", populatedAreas);
 });
 
 function getLocationDetails(lat, lon) {
-  const apiKey = '37eea66381f54ae78f6a16bb4cdda049'; // Use your OpenCage API key please dont use mine ;v
+  const apiKey = "37eea66381f54ae78f6a16bb4cdda049"; // Use your OpenCage API key please dont use mine ;v
   const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}`;
 
   fetch(url)
@@ -97,7 +98,9 @@ function setLocationInUI(lat, lon, locationString) {
   // Update the text field with the location
   const input = document.getElementById("location-input");
   if (input) {
-    input.value = `${locationString} (${latNum.toFixed(2)}, ${lonNum.toFixed(2)})`;
+    input.value = `${locationString} (${latNum.toFixed(2)}, ${lonNum.toFixed(
+      2
+    )})`;
   }
 
   // Update the information container

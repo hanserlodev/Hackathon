@@ -1,5 +1,8 @@
 // Import classification functions
-import { classifySimulationEffects, generateSeverityReport } from './emergency-protocols.js';
+import {
+  classifySimulationEffects,
+  generateSeverityReport,
+} from "./emergency-protocols.js";
 
 // Main simulation controller
 class MeteorSimulation {
@@ -66,7 +69,7 @@ class MeteorSimulation {
         lat: -10,
         lon: 75,
         label: "Indian Ocean (Deep Water)",
-      }
+      },
     ];
 
     this.init();
@@ -91,9 +94,8 @@ class MeteorSimulation {
     if (sizeSlider) {
       sizeSlider.addEventListener("input", () => {
         const value = parseInt(sizeSlider.value);
-        const formatted = value >= 1000 
-          ? `${(value/1000).toFixed(1)} km` 
-          : `${value}m`;
+        const formatted =
+          value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${value}m`;
         document.getElementById("size-value").textContent = formatted;
       });
     } else {
@@ -155,7 +157,7 @@ class MeteorSimulation {
     const messageContainer = document.getElementById("visualization-message");
     if (messageContainer) {
       messageContainer.textContent = message;
-      messageContainer.style.display = 'block'; // Show message
+      messageContainer.style.display = "block"; // Show message
     }
   }
 
@@ -177,13 +179,13 @@ class MeteorSimulation {
         <span>${message}</span>
       </div>
     `;
-    calcMessage.style.display = 'block';
+    calcMessage.style.display = "block";
   }
 
   hideCalculationMessage() {
     const calcMessage = document.getElementById("calculation-progress");
     if (calcMessage) {
-      calcMessage.style.display = 'none';
+      calcMessage.style.display = "none";
     }
   }
 
@@ -191,14 +193,14 @@ class MeteorSimulation {
     // Check if coordinates are over water using Overpass API
     try {
       const overpassUrl = "https://overpass-api.de/api/interpreter";
-      
+
       // Small radius query (500m) just to check terrain type
       const radius = 500; // meters
       const lat1 = lat - radius / 111320;
       const lon1 = lon - radius / (111320 * Math.cos((lat * Math.PI) / 180));
       const lat2 = lat + radius / 111320;
       const lon2 = lon + radius / (111320 * Math.cos((lat * Math.PI) / 180));
-      
+
       // Query for land features (buildings, highways, landuse)
       const query = `
         [out:json][timeout:10];
@@ -211,24 +213,23 @@ class MeteorSimulation {
         );
         out body;
       `;
-      
+
       const response = await fetch(
         `${overpassUrl}?data=${encodeURIComponent(query)}`,
         { method: "GET", timeout: 10000 }
       );
-      
+
       if (!response.ok) {
         console.warn("Could not determine terrain type, assuming land");
         return false;
       }
-      
+
       const data = await response.json();
-      
+
       // If no land features found, it's likely water
       const isWater = !data.elements || data.elements.length === 0;
-      
+
       return isWater;
-      
     } catch (error) {
       console.error("Error checking terrain type:", error);
       // Default to land impact if check fails
@@ -300,9 +301,7 @@ class MeteorSimulation {
 
     const value = input.value.trim();
     if (!value) {
-      this.showInlineMessage(
-        "Please enter a location or coordinates."
-      );
+      this.showInlineMessage("Please enter a location or coordinates.");
       return;
     }
 
@@ -365,28 +364,26 @@ class MeteorSimulation {
 
   async startSimulation() {
     if (this.isSimulating) {
-      this.showInlineMessage(
-        "The simulation is already running."
-      );
+      this.showInlineMessage("The simulation is already running.");
       return;
     }
 
     if (!this.impactCoordinates) {
-      this.showInlineMessage(
-        "Select a location before starting."
-      );
+      this.showInlineMessage("Select a location before starting.");
       return;
     }
 
     // Get meteorite parameters
     const diameter = parseFloat(document.getElementById("meteor-size").value);
-    const velocity = parseFloat(document.getElementById("meteor-velocity").value);
+    const velocity = parseFloat(
+      document.getElementById("meteor-velocity").value
+    );
     const angle = parseFloat(document.getElementById("meteor-angle").value);
     const density = document.getElementById("meteor-density").value;
 
     this.isSimulating = true;
     this.updateStartButton(true);
-    
+
     // Show calculation message
     this.showCalculationMessage("Phase 1/3: Detecting impact terrain type...");
 
@@ -395,12 +392,12 @@ class MeteorSimulation {
       this.impactCoordinates.lat,
       this.impactCoordinates.lon
     );
-    
-    console.log(`Impact terrain: ${isOceanImpact ? 'OCEAN/WATER' : 'LAND'}`);
+
+    console.log(`Impact terrain: ${isOceanImpact ? "OCEAN/WATER" : "LAND"}`);
 
     // Step 1: Calculate preliminary impact to get destruction radius
     this.showCalculationMessage("Phase 2/3: Calculating impact effects...");
-    
+
     const preliminaryEffects = this.calculations.calculateAllEffects(
       diameter,
       velocity,
@@ -416,17 +413,23 @@ class MeteorSimulation {
       1000 // Minimum 1 km radius
     );
 
-    console.log(`Calculated destruction radius: ${preliminaryEffects.totalDestructionZone.toFixed(2)} km`);
-    console.log(`Querying Overpass with radius: ${(queryRadius/1000).toFixed(2)} km`);
+    console.log(
+      `Calculated destruction radius: ${preliminaryEffects.totalDestructionZone.toFixed(
+        2
+      )} km`
+    );
+    console.log(
+      `Querying Overpass with radius: ${(queryRadius / 1000).toFixed(2)} km`
+    );
 
     // Step 2: Query Overpass API with the calculated radius
     this.showCalculationMessage("Phase 3/3: Analyzing affected population...");
-    
+
     let populationDensity = 1000; // Default value
     let overpassData = null; // Store for classification
-    
+
     try {
-      if (typeof fetchImpactData === 'function') {
+      if (typeof fetchImpactData === "function") {
         overpassData = await fetchImpactData(
           this.impactCoordinates.lat,
           this.impactCoordinates.lon,
@@ -437,10 +440,18 @@ class MeteorSimulation {
           // Calculate area in km²
           const areaKm2 = Math.PI * Math.pow(queryRadius / 1000, 2);
           populationDensity = overpassData.totalPopulation / areaKm2;
-          console.log(`Real population found: ${overpassData.totalPopulation.toLocaleString()}`);
-          console.log(`Calculated population density: ${populationDensity.toFixed(2)} people/km²`);
+          console.log(
+            `Real population found: ${overpassData.totalPopulation.toLocaleString()}`
+          );
+          console.log(
+            `Calculated population density: ${populationDensity.toFixed(
+              2
+            )} people/km²`
+          );
         } else {
-          console.warn("No population data found in area. Using default density of 1000 people/km²");
+          console.warn(
+            "No population data found in area. Using default density of 1000 people/km²"
+          );
         }
       }
     } catch (error) {
@@ -457,7 +468,7 @@ class MeteorSimulation {
       populationDensity,
       isOceanImpact
     );
-    
+
     // Step 4: Classify severity and generate report
     let classification = null;
     if (overpassData) {
@@ -468,31 +479,38 @@ class MeteorSimulation {
         console.error("Error classifying simulation effects:", error);
       }
     }
-    
+
     // Hide calculation message
     this.hideCalculationMessage();
-    
-    this.currentSimulation = { 
+
+    this.currentSimulation = {
       effects,
-      parameters: { diameter, velocity, angle, density, populationDensity, isOceanImpact },
+      parameters: {
+        diameter,
+        velocity,
+        angle,
+        density,
+        populationDensity,
+        isOceanImpact,
+      },
       coordinates: this.impactCoordinates,
       classification: classification,
-      overpassData: overpassData
+      overpassData: overpassData,
     };
 
     this.displayEffects(effects);
-    
+
     // Display severity classification if available
     if (classification) {
       this.displaySeverityClassification(classification);
     }
-    
+
     this.triggerSimulationEffects();
     this.earthMap2D.animateImpact();
-    
+
     // Store effects in map for toggle buttons
     this.earthMap2D.storeEffects(effects, isOceanImpact);
-    
+
     // Setup toggle buttons for secondary effects
     setTimeout(() => {
       this.setupSecondaryEffectToggles();
@@ -504,11 +522,11 @@ class MeteorSimulation {
   setupSecondaryEffectToggles() {
     // Convert secondary effect items to toggle buttons
     const effectItems = {
-      'earthquake-effect': 'seismic',
-      'tsunami-effect': 'tsunami',
-      'blast-wave-effect': 'blastWave',
-      'fire-effect': 'thermal',
-      'dust-effect': 'ejecta'
+      "earthquake-effect": "seismic",
+      "tsunami-effect": "tsunami",
+      "blast-wave-effect": "blastWave",
+      "fire-effect": "thermal",
+      "dust-effect": "ejecta",
     };
 
     Object.entries(effectItems).forEach(([elementId, layerType]) => {
@@ -518,30 +536,30 @@ class MeteorSimulation {
       // Remove old listeners
       element.replaceWith(element.cloneNode(true));
       const newElement = document.getElementById(elementId);
-      
+
       // Make it clickable
-      newElement.style.cursor = 'pointer';
-      newElement.classList.add('effect-toggle');
-      
+      newElement.style.cursor = "pointer";
+      newElement.classList.add("effect-toggle");
+
       // Add click listener
-      newElement.addEventListener('click', () => {
-        const isActive = newElement.classList.toggle('active');
-        
+      newElement.addEventListener("click", () => {
+        const isActive = newElement.classList.toggle("active");
+
         // Toggle the corresponding circle
-        switch(layerType) {
-          case 'seismic':
+        switch (layerType) {
+          case "seismic":
             this.earthMap2D.toggleSeismic(isActive);
             break;
-          case 'tsunami':
+          case "tsunami":
             this.earthMap2D.toggleTsunami(isActive);
             break;
-          case 'blastWave':
+          case "blastWave":
             this.earthMap2D.toggleBlastWave(isActive);
             break;
-          case 'thermal':
+          case "thermal":
             this.earthMap2D.toggleThermal(isActive);
             break;
-          case 'ejecta':
+          case "ejecta":
             this.earthMap2D.toggleEjecta(isActive);
             break;
         }
@@ -552,26 +570,24 @@ class MeteorSimulation {
   displayEffects(effects) {
     // Update key metrics
     this.setText("energy-value", formatEnergy(effects.energyMegatons));
-    this.setText(
-      "crater-diameter",
-      formatDistance(effects.craterDiameter)
-    );
+    this.setText("crater-diameter", formatDistance(effects.craterDiameter));
     this.setText(
       "casualties",
-      `${effects.casualties.fatalities.toLocaleString("en-US")} fatalities / ${effects.casualties.injuries.toLocaleString("en-US")} injuries`
+      `${effects.casualties.fatalities.toLocaleString(
+        "en-US"
+      )} fatalities / ${effects.casualties.injuries.toLocaleString(
+        "en-US"
+      )} injuries`
     );
     this.setText(
       "destruction-zone",
       formatDistance(effects.totalDestructionZone)
     );
-    
+
     // Display population density if available
     if (this.currentSimulation && this.currentSimulation.parameters) {
       const popDensity = this.currentSimulation.parameters.populationDensity;
-      this.setText(
-        "population-density",
-        `${popDensity.toFixed(0)} people/km²`
-      );
+      this.setText("population-density", `${popDensity.toFixed(0)} people/km²`);
     }
 
     // Update secondary effects
@@ -579,25 +595,25 @@ class MeteorSimulation {
       "earthquake-magnitude",
       `Magnitude: ${effects.earthquake.magnitude.toFixed(1)}`
     );
-    
+
     // Display blast wave zones information
     if (effects.casualties && effects.casualties.zones) {
       const zones = effects.casualties.zones;
-      const isOcean = this.currentSimulation?.parameters?.isOceanImpact || false;
-      
+      const isOcean =
+        this.currentSimulation?.parameters?.isOceanImpact || false;
+
       if (isOcean) {
-        this.setText(
-          "blast-wave-zones",
-          `N/A (Underwater Explosion)`
-        );
+        this.setText("blast-wave-zones", `N/A (Underwater Explosion)`);
       } else {
         this.setText(
           "blast-wave-zones",
-          `5 zones: ${zones.totalDestruction.toFixed(1)}km (20psi) → ${zones.glassBreakage.toFixed(1)}km (1psi)`
+          `5 zones: ${zones.totalDestruction.toFixed(
+            1
+          )}km (20psi) → ${zones.glassBreakage.toFixed(1)}km (1psi)`
         );
       }
     }
-    
+
     // Highlight tsunami for ocean impacts
     const tsunamiElement = document.getElementById("tsunami-height");
     if (effects.tsunami.applicable && effects.tsunami.height > 0) {
@@ -610,47 +626,42 @@ class MeteorSimulation {
         tsunamiElement.style.fontWeight = "bold";
       }
     } else {
-      this.setText(
-        "tsunami-height",
-        `Height: N/A (Land Impact)`
-      );
+      this.setText("tsunami-height", `Height: N/A (Land Impact)`);
       if (tsunamiElement) {
         tsunamiElement.style.color = "#4ecdc4";
         tsunamiElement.style.fontWeight = "normal";
       }
     }
-    
-    this.setText(
-      "fire-radius",
-      formatDistance(effects.fire.radius)
-    );
-    this.setText(
-      "dust-radius",
-      formatDistance(effects.dust.radius)
-    );
+
+    this.setText("fire-radius", formatDistance(effects.fire.radius));
+    this.setText("dust-radius", formatDistance(effects.dust.radius));
   }
 
   displaySeverityClassification(classification) {
     // Find or create severity panel
     let severityPanel = document.getElementById("severity-panel");
-    
+
     if (!severityPanel) {
       // Create panel if it doesn't exist
       severityPanel = document.createElement("div");
       severityPanel.id = "severity-panel";
       severityPanel.className = "severity-panel";
-      
+
       // Insert after effects panel
       const effectsPanel = document.querySelector(".effects-panel");
       if (effectsPanel && effectsPanel.parentNode) {
-        effectsPanel.parentNode.insertBefore(severityPanel, effectsPanel.nextSibling);
+        effectsPanel.parentNode.insertBefore(
+          severityPanel,
+          effectsPanel.nextSibling
+        );
       } else {
         // Fallback: append to main content
-        const mainContent = document.querySelector(".main-content") || document.body;
+        const mainContent =
+          document.querySelector(".main-content") || document.body;
         mainContent.appendChild(severityPanel);
       }
     }
-    
+
     // Generate and insert the severity report HTML
     const reportHTML = generateSeverityReport(classification);
     severityPanel.innerHTML = `
@@ -659,10 +670,10 @@ class MeteorSimulation {
       </div>
       ${reportHTML}
     `;
-    
+
     // Scroll to severity panel
     setTimeout(() => {
-      severityPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      severityPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 300);
   }
 
@@ -690,7 +701,7 @@ class MeteorSimulation {
     if (this.earthMap2D) {
       this.earthMap2D.clearImpactZones();
     }
-    
+
     // Remove severity panel if it exists
     const severityPanel = document.getElementById("severity-panel");
     if (severityPanel) {
@@ -711,8 +722,6 @@ class MeteorSimulation {
     this.setText("dust-radius", "Radius: -");
   }
 
-
-
   updateStartButton(disabled) {
     const startButton = document.getElementById("start-simulation");
     if (!startButton) {
@@ -720,7 +729,9 @@ class MeteorSimulation {
     }
 
     startButton.disabled = disabled;
-    startButton.textContent = disabled ? "Simulating..." : "Initialize Simulation";
+    startButton.textContent = disabled
+      ? "Simulating..."
+      : "Initialize Simulation";
   }
 
   setText(id, value) {
